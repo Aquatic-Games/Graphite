@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Silk.NET.Vulkan" Version="2.22.0" />
+    </ItemGroup>
+
 </Project>
