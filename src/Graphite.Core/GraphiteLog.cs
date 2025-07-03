@@ -7,14 +7,14 @@ public static class GraphiteLog
 {
     public static event OnLogMessage LogMessage = delegate { };
 
-    public static void Log(Severity severity, string message, [CallerLineNumber] int line = 0,
+    public static void Log(Severity severity, Type type, string message, [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
-        LogMessage(severity, message, line, file);
+        LogMessage(severity, type, message, line, file);
     }
 
     public static void Log(string message, [CallerLineNumber] int line = 0, [CallerFilePath] string file = "")
-        => Log(Severity.Verbose, message, line, file);
+        => Log(Severity.Verbose, Type.General, message, line, file);
 
     public enum Severity
     {
@@ -24,5 +24,13 @@ public static class GraphiteLog
         Error
     }
 
-    public delegate void OnLogMessage(Severity severity, string message, int line, string file);
+    public enum Type
+    {
+        Other,
+        General,
+        Performance,
+        Validation
+    }
+
+    public delegate void OnLogMessage(Severity severity, Type type, string message, int line, string file);
 }

@@ -15,6 +15,11 @@ public unsafe struct Utf8StringArray : IDisposable
     public Utf8StringArray(params ReadOnlySpan<string> strings)
     {
         Length = (uint) strings.Length;
+
+        // No point allocating if the length is 0.
+        if (Length == 0)
+            return;
+        
         _strings = (byte**) NativeMemory.Alloc((nuint) (Length * sizeof(byte*)));
 
         for (int i = 0; i < Length; i++)
@@ -41,6 +46,9 @@ public unsafe struct Utf8StringArray : IDisposable
 
     public void Dispose()
     {
+        if (Length == 0)
+            return;
+        
         for (int i = 0; i < Length; i++)
             NativeMemory.Free(_strings[i]);
         
