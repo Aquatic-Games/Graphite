@@ -63,7 +63,35 @@ internal sealed unsafe class VulkanInstance : Instance
         GraphiteLog.Log("Creating instance.");
         _vk.CreateInstance(&instanceInfo, null, out _instance).Check("Create instance");
     }
-    
+
+    public override Adapter[] EnumerateAdapters()
+    {
+        List<Adapter> adapters = [];
+        
+        uint numDevices;
+        _vk.EnumeratePhysicalDevices(_instance, &numDevices, null);
+        PhysicalDevice* devices = stackalloc PhysicalDevice[(int) numDevices];
+        _vk.EnumeratePhysicalDevices(_instance, &numDevices, devices);
+
+        for (uint i = 0; i < numDevices; i++)
+        {
+            PhysicalDevice device = devices[i];
+            
+            PhysicalDeviceProperties props;
+            _vk.GetPhysicalDeviceProperties(device, &props);
+            
+            // Must support Vulkan 1.3 or above.
+            if (props.ApiVersion < Vk.Version13)
+                continue;
+
+            string name = new string((sbyte*) props.DeviceName);
+            
+            adapters.Add(new Adapter(device.Handle, i, name));
+        }
+
+        return adapters.ToArray();
+    }
+
     public override void Dispose()
     {
         GraphiteLog.Log("Destroying instance.");
