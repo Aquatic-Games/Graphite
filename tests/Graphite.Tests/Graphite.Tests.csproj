@@ -11,4 +11,8 @@
       <ProjectReference Include="..\..\src\Graphite\Graphite.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="SDL3-CS" Version="3.2.16.4" />
+    </ItemGroup>
+
 </Project>

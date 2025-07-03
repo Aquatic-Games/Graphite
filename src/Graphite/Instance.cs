@@ -5,6 +5,8 @@ namespace Graphite;
 public abstract class Instance : IDisposable
 {
     public abstract Adapter[] EnumerateAdapters();
+
+    public abstract Surface CreateSurface(in SurfaceInfo info);
     
     public abstract void Dispose();
 
