@@ -1,15 +1,37 @@
 ﻿using Graphite.Vulkan;
 
 namespace Graphite;
-
+/// <summary>
+/// An <see cref="Instance"/> contains the core functions needed to create graphics objects.
+/// </summary>
 public abstract class Instance : IDisposable
 {
+    /// <summary>
+    /// Enumerate the supported <see cref="Adapter"/>s present on the system.
+    /// </summary>
+    /// <returns>The enumerated <see cref="Adapter"/>s.</returns>
+    /// <remarks>If an empty array is returned, it means no adapters support the current backend. Try a different
+    /// <see cref="Backend"/> instead.</remarks>
     public abstract Adapter[] EnumerateAdapters();
 
+    /// <summary>
+    /// Create a <see cref="Surface"/> for use in a <see cref="Swapchain"/>.
+    /// </summary>
+    /// <param name="info">The <see cref="SurfaceInfo"/> used to create the surface.</param>
+    /// <returns>The created <see cref="Surface"/>.</returns>
     public abstract Surface CreateSurface(in SurfaceInfo info);
     
+    /// <summary>
+    /// Dispose of this <see cref="Instance"/>.
+    /// </summary>
     public abstract void Dispose();
 
+    /// <summary>
+    /// Create an <see cref="Instance"/>. This will automatically pick the best <see cref="Backend"/> for the current
+    /// system.
+    /// </summary>
+    /// <param name="info">The <see cref="InstanceInfo"/> used to create the instance.</param>
+    /// <returns>The created <see cref="Instance"/>.</returns>
     public static Instance Create(in InstanceInfo info)
     {
         return new VulkanInstance(in info);

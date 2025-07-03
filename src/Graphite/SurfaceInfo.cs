@@ -1,11 +1,23 @@
 namespace Graphite;
 
+/// <summary>
+/// Contains the underlying window manager handles for use when creating a <see cref="Surface"/>.
+/// </summary>
 public struct SurfaceInfo
 {
+    /// <summary>
+    /// The window manager type.
+    /// </summary>
     public SurfaceType Type;
 
+    /// <summary>
+    /// A pointer to the display.
+    /// </summary>
     public nint Display;
 
+    /// <summary>
+    /// A pointer to the window/surface.
+    /// </summary>
     public nint Window;
 
     public SurfaceInfo(SurfaceType type, IntPtr display, IntPtr window)
