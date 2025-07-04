@@ -20,6 +20,14 @@ public abstract class Instance : IDisposable
     /// <param name="info">The <see cref="SurfaceInfo"/> used to create the surface.</param>
     /// <returns>The created <see cref="Surface"/>.</returns>
     public abstract Surface CreateSurface(in SurfaceInfo info);
+
+    /// <summary>
+    /// Create a logical <see cref="Device"/>.
+    /// </summary>
+    /// <param name="surface">A surface to create the device with.</param>
+    /// <param name="adapter">The <see cref="Adapter"/>, if any. If null is provided, the default adapter is used.</param>
+    /// <returns>The created <see cref="Device"/>.</returns>
+    public abstract Device CreateDevice(Surface surface, Adapter? adapter = null);
     
     /// <summary>
     /// Dispose of this <see cref="Instance"/>.

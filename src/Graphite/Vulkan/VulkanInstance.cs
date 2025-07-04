@@ -139,6 +139,22 @@ internal sealed unsafe class VulkanInstance : Instance
         return new VulkanSurface(_vk, _instance, in info);
     }
 
+    public override Device CreateDevice(Surface surface, Adapter? adapter = null)
+    {
+        PhysicalDevice device;
+
+        if (adapter is { } adp)
+            device = new PhysicalDevice(adp.Handle);
+        else
+        {
+            // EnumerateAdapters already only returns valid adapters so this saves needing to do it again.
+            Adapter[] adapters = EnumerateAdapters();
+            device = new PhysicalDevice(adapters[0].Handle);
+        }
+
+        return new VulkanDevice(_vk, _instance, (VulkanSurface) surface, device);
+    }
+
     public override void Dispose()
     {
         if (_debugUtilsExt != null)

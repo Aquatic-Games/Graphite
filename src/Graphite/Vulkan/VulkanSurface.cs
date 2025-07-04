@@ -7,20 +7,20 @@ namespace Graphite.Vulkan;
 internal sealed unsafe class VulkanSurface : Surface
 {
     private readonly VkInstance _instance;
-    private readonly KhrSurface _surfaceExt;
     
     private readonly KhrWin32Surface? _win32Surface;
     private readonly KhrXlibSurface? _xlibSurface;
     private readonly KhrXcbSurface? _xcbSurface;
     private readonly KhrWaylandSurface? _waylandSurface;
 
+    public readonly KhrSurface SurfaceExt;
     public readonly SurfaceKHR Surface;
     
     public VulkanSurface(Vk vk, VkInstance instance, ref readonly SurfaceInfo info)
     {
         _instance = instance;
 
-        if (!vk.TryGetInstanceExtension(_instance, out _surfaceExt))
+        if (!vk.TryGetInstanceExtension(_instance, out SurfaceExt))
             throw new Exception("Failed to get surface extension.");
 
         switch (info.Type)
@@ -109,13 +109,13 @@ internal sealed unsafe class VulkanSurface : Surface
     public override void Dispose()
     {
         GraphiteLog.Log("Destroying surface.");
-        _surfaceExt.DestroySurface(_instance, Surface, null);
+        SurfaceExt.DestroySurface(_instance, Surface, null);
         
         _waylandSurface?.Dispose();
         _xcbSurface?.Dispose();
         _xlibSurface?.Dispose();
         _win32Surface?.Dispose();
         
-        _surfaceExt.Dispose();
+        SurfaceExt.Dispose();
     }
 }

@@ -53,6 +53,7 @@ else
     throw new PlatformNotSupportedException();
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
+Device device = instance.CreateDevice(surface);
 
 bool alive = true;
 while (alive)
@@ -68,6 +69,7 @@ while (alive)
     }
 }
 
+device.Dispose();
 surface.Dispose();
 instance.Dispose();
 SDL.DestroyWindow(window);
