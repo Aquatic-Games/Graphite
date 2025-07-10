@@ -9,7 +9,8 @@ namespace Graphite.Vulkan;
 internal sealed unsafe class VulkanDevice : Device
 {
     private readonly Vk _vk;
-    private readonly VkInstance _instance;
+    
+    public readonly VkInstance Instance;
     
     public readonly PhysicalDevice PhysicalDevice;
     public readonly Queues Queues;
@@ -18,7 +19,7 @@ internal sealed unsafe class VulkanDevice : Device
     public VulkanDevice(Vk vk, VkInstance instance, VulkanSurface surface, PhysicalDevice physicalDevice)
     {
         _vk = vk;
-        _instance = instance;
+        Instance = instance;
         PhysicalDevice = physicalDevice;
 
         uint? graphicsQueue = null;
@@ -93,7 +94,12 @@ internal sealed unsafe class VulkanDevice : Device
         _vk.GetDeviceQueue(Device, Queues.GraphicsIndex, 0, out Queues.Graphics);
         _vk.GetDeviceQueue(Device, Queues.PresentIndex, 0, out Queues.Present);
     }
-    
+
+    public override Swapchain CreateSwapchain(in SwapchainInfo info)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void Dispose()
     {
         GraphiteLog.Log("Destroying device.");
