@@ -84,4 +84,14 @@ internal static class VulkanUtils
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
         };
     }
+
+    public static PresentModeKHR ToVk(this PresentMode mode)
+    {
+        return mode switch
+        {
+            PresentMode.Fifo => PresentModeKHR.FifoKhr,
+            PresentMode.Immediate => PresentModeKHR.ImmediateKhr,
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+        };
+    }
 }

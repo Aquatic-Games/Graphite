@@ -97,7 +97,7 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override Swapchain CreateSwapchain(in SwapchainInfo info)
     {
-        throw new NotImplementedException();
+        return new VulkanSwapchain(_vk, this, in info);
     }
 
     public override void Dispose()

@@ -13,10 +13,10 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
-const uint width = 1280;
-const uint height = 720;
+const int width = 1280;
+const int height = 720;
 
-IntPtr window = SDL.CreateWindow("Graphite.Tests", (int) width, (int) height, 0);
+IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, 0);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
 
@@ -54,6 +54,9 @@ else
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
+Swapchain swapchain =
+    device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
+        PresentMode.Fifo, 2));
 
 bool alive = true;
 while (alive)
@@ -69,6 +72,7 @@ while (alive)
     }
 }
 
+swapchain.Dispose();
 device.Dispose();
 surface.Dispose();
 instance.Dispose();
