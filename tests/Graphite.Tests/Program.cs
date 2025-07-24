@@ -70,6 +70,8 @@ while (alive)
                 break;
         }
     }
+    
+    swapchain.Present();
 }
 
 swapchain.Dispose();
