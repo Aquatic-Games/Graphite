@@ -150,6 +150,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanSwapchain(_vk, this, in info);
     }
 
+    public override CommandList CreateCommandList()
+    {
+        return new VulkanCommandList(_vk, Device, _pool);
+    }
+
     public override void Dispose()
     {
         GraphiteLog.Log("Destroying command pool.");
