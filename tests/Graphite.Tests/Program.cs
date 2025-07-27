@@ -61,6 +61,15 @@ Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
+byte[] vShader = File.ReadAllBytes("Shader_v.spv");
+byte[] pShader = File.ReadAllBytes("Shader_p.spv");
+
+ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
+ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
+
+pixelShader.Dispose();
+vertexShader.Dispose();
+
 bool alive = true;
 while (alive)
 {

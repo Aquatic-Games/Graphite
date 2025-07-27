@@ -15,4 +15,9 @@
       <PackageReference Include="SDL3-CS" Version="3.2.16.4" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="Shader_v.spv" CopyToOutputDirectory="PreserveNewest" />
+      <None Include="Shader_p.spv" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
 </Project>
