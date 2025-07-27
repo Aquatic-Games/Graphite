@@ -89,6 +89,13 @@ internal sealed unsafe class VulkanDevice : Device
 
             PEnabledFeatures = &deviceFeatures
         };
+
+        PhysicalDeviceDynamicRenderingFeatures dynamicRendering = new()
+        {
+            SType = StructureType.PhysicalDeviceDynamicRenderingFeatures,
+            DynamicRendering = true
+        };
+        deviceInfo.PNext = &dynamicRendering;
         
         GraphiteLog.Log("Creating device.");
         _vk.CreateDevice(PhysicalDevice, &deviceInfo, null, out Device).Check("Create device");
@@ -153,6 +160,25 @@ internal sealed unsafe class VulkanDevice : Device
     public override CommandList CreateCommandList()
     {
         return new VulkanCommandList(_vk, Device, _pool);
+    }
+
+    public override void ExecuteCommandList(CommandList cl)
+    {
+        VulkanCommandList vulkanCl = (VulkanCommandList) cl;
+        CommandBuffer buffer = vulkanCl.Buffer;
+
+        SubmitInfo submitInfo = new()
+        {
+            SType = StructureType.SubmitInfo,
+            CommandBufferCount = 1,
+            PCommandBuffers = &buffer
+        };
+
+        _vk.QueueSubmit(Queues.Graphics, 1, &submitInfo, new Fence()).Check("Submit queue");
+        // TODO: Obviously waiting for the queue to idle is not a good way of synchronization.
+        // Use semaphores.
+        _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
+        
     }
 
     public override void Dispose()

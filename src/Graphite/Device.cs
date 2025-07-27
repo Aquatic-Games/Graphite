@@ -5,6 +5,8 @@ public abstract class Device : IDisposable
     public abstract Swapchain CreateSwapchain(in SwapchainInfo info);
 
     public abstract CommandList CreateCommandList();
+
+    public abstract void ExecuteCommandList(CommandList cl);
     
     public abstract void Dispose();
 }

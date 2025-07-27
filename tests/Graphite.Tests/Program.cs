@@ -1,5 +1,7 @@
-﻿using Graphite;
+﻿using System.Drawing;
+using Graphite;
 using Graphite.Core;
+using Graphite.Vulkan;
 using SDL3;
 
 GraphiteLog.LogMessage += (severity, type, message, _, _) =>
@@ -71,7 +73,15 @@ while (alive)
                 break;
         }
     }
+
+    Texture texture = swapchain.GetNextTexture();
     
+    cl.Begin();
+    cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
+    cl.EndRenderPass();
+    cl.End();
+    
+    device.ExecuteCommandList(cl);
     swapchain.Present();
 }
 
