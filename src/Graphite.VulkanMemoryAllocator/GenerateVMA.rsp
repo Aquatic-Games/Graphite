@@ -19,7 +19,9 @@ VulkanMemoryAllocator
 --config
 multi-file
 generate-helper-types
+generate-file-scoped-namespaces
 strip-enum-member-type-name
+log-potential-typedef-remappings
 
 --file
 ../../lib/VulkanMemoryAllocator/include/vk_mem_alloc.h

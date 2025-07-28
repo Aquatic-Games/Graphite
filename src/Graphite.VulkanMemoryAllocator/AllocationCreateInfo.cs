@@ -1,29 +1,28 @@
 using Silk.NET.Vulkan;
 
-namespace Graphite.VulkanMemoryAllocator
+namespace Graphite.VulkanMemoryAllocator;
+
+public unsafe partial struct AllocationCreateInfo
 {
-    public unsafe partial struct AllocationCreateInfo
-    {
-        [NativeTypeName("VmaAllocationCreateFlags")]
-        public uint flags;
+    [NativeTypeName("VmaAllocationCreateFlags")]
+    public uint flags;
 
-        public VmaMemoryUsage usage;
+    public VmaMemoryUsage usage;
 
-        [NativeTypeName("VkMemoryPropertyFlags")]
-        public uint requiredFlags;
+    [NativeTypeName("VkMemoryPropertyFlags")]
+    public uint requiredFlags;
 
-        [NativeTypeName("VkMemoryPropertyFlags")]
-        public uint preferredFlags;
+    [NativeTypeName("VkMemoryPropertyFlags")]
+    public uint preferredFlags;
 
-        [NativeTypeName("uint32_t")]
-        public uint memoryTypeBits;
+    [NativeTypeName("uint32_t")]
+    public uint memoryTypeBits;
 
-        [NativeTypeName("VmaPool _Nullable")]
-        public VmaPool_T* pool;
+    [NativeTypeName("VmaPool _Nullable")]
+    public VmaPool_T* pool;
 
-        [NativeTypeName("void * _Nullable")]
-        public void* pUserData;
+    [NativeTypeName("void * _Nullable")]
+    public void* pUserData;
 
-        public float priority;
-    }
+    public float priority;
 }

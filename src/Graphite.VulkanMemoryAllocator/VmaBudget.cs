@@ -1,15 +1,14 @@
 using Silk.NET.Vulkan;
 
-namespace Graphite.VulkanMemoryAllocator
+namespace Graphite.VulkanMemoryAllocator;
+
+public partial struct VmaBudget
 {
-    public partial struct VmaBudget
-    {
-        public VmaStatistics statistics;
+    public VmaStatistics statistics;
 
-        [NativeTypeName("VkDeviceSize")]
-        public nuint usage;
+    [NativeTypeName("VkDeviceSize")]
+    public nuint usage;
 
-        [NativeTypeName("VkDeviceSize")]
-        public nuint budget;
-    }
+    [NativeTypeName("VkDeviceSize")]
+    public nuint budget;
 }

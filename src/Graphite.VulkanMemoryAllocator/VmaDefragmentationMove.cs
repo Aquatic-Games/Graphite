@@ -1,15 +1,14 @@
 using Silk.NET.Vulkan;
 
-namespace Graphite.VulkanMemoryAllocator
+namespace Graphite.VulkanMemoryAllocator;
+
+public unsafe partial struct VmaDefragmentationMove
 {
-    public unsafe partial struct VmaDefragmentationMove
-    {
-        public VmaDefragmentationMoveOperation operation;
+    public VmaDefragmentationMoveOperation operation;
 
-        [NativeTypeName("VmaAllocation _Nonnull")]
-        public Allocation* srcAllocation;
+    [NativeTypeName("VmaAllocation _Nonnull")]
+    public Allocation* srcAllocation;
 
-        [NativeTypeName("VmaAllocation _Nonnull")]
-        public Allocation* dstTmpAllocation;
-    }
+    [NativeTypeName("VmaAllocation _Nonnull")]
+    public Allocation* dstTmpAllocation;
 }

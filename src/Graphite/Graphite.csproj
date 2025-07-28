@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Graphite.Core\Graphite.Core.csproj" />
+      <ProjectReference Include="..\Graphite.VulkanMemoryAllocator\Graphite.VulkanMemoryAllocator.csproj" />
     </ItemGroup>
 
 </Project>

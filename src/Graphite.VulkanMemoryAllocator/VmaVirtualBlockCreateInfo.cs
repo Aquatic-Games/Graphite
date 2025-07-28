@@ -1,16 +1,15 @@
 using Silk.NET.Vulkan;
 
-namespace Graphite.VulkanMemoryAllocator
+namespace Graphite.VulkanMemoryAllocator;
+
+public unsafe partial struct VmaVirtualBlockCreateInfo
 {
-    public unsafe partial struct VmaVirtualBlockCreateInfo
-    {
-        [NativeTypeName("VkDeviceSize")]
-        public nuint size;
+    [NativeTypeName("VkDeviceSize")]
+    public nuint size;
 
-        [NativeTypeName("VmaVirtualBlockCreateFlags")]
-        public uint flags;
+    [NativeTypeName("VmaVirtualBlockCreateFlags")]
+    public uint flags;
 
-        [NativeTypeName("const VkAllocationCallbacks * _Nullable")]
-        public AllocationCallbacks* pAllocationCallbacks;
-    }
+    [NativeTypeName("const VkAllocationCallbacks * _Nullable")]
+    public AllocationCallbacks* pAllocationCallbacks;
 }

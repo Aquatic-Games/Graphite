@@ -1,8 +1,7 @@
 using Silk.NET.Vulkan;
 
-namespace Graphite.VulkanMemoryAllocator
+namespace Graphite.VulkanMemoryAllocator;
+
+public partial struct Allocation
 {
-    public partial struct Allocation
-    {
-    }
 }

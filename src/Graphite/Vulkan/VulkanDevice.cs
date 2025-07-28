@@ -1,6 +1,7 @@
 global using VkDevice = Silk.NET.Vulkan.Device;
 using System.Runtime.CompilerServices;
 using Graphite.Core;
+using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Core;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -12,6 +13,7 @@ internal sealed unsafe class VulkanDevice : Device
     private readonly Vk _vk;
     private readonly CommandPool _pool;
     private readonly CommandBuffer _singleTimeBuffer;
+    private readonly Allocator* _allocator;
     
     public readonly VkInstance Instance;
     
@@ -122,6 +124,16 @@ internal sealed unsafe class VulkanDevice : Device
         };
         GraphiteLog.Log("Allocating single-time buffer.");
         _vk.AllocateCommandBuffers(Device, &allocInfo, out _singleTimeBuffer);
+
+        AllocatorCreateInfo allocatorInfo = new()
+        {
+            instance = Instance,
+            device = Device,
+            physicalDevice = PhysicalDevice
+        };
+        
+        GraphiteLog.Log("Creating allocator.");
+        Vma.CreateAllocator(&allocatorInfo, out _allocator).Check("Create allocator");
     }
 
     public CommandBuffer BeginCommands()
@@ -172,6 +184,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanPipeline(_vk, Device, in info);
     }
 
+    public override Buffer CreateBuffer(in BufferInfo info)
+    {
+        
+    }
+
     public override void ExecuteCommandList(CommandList cl)
     {
         VulkanCommandList vulkanCl = (VulkanCommandList) cl;
@@ -188,11 +205,13 @@ internal sealed unsafe class VulkanDevice : Device
         // TODO: Obviously waiting for the queue to idle is not a good way of synchronization.
         // Use semaphores.
         _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
-        
     }
 
     public override void Dispose()
     {
+        GraphiteLog.Log("Destroying allocator.");
+        Vma.DestroyAllocator(_allocator);
+        
         GraphiteLog.Log("Destroying command pool.");
         _vk.DestroyCommandPool(Device, _pool, null);
         
