@@ -104,7 +104,9 @@ internal sealed unsafe class VulkanCommandList : CommandList
         
         _vk.CmdBeginRendering(Buffer, &renderingInfo);
 
-        Viewport viewport = new Viewport(0, 0, attachmentSize.Width, attachmentSize.Height, 0, 1);
+        // Vulkan requires a reverse viewport
+        // TODO: SetViewport method.
+        Viewport viewport = new Viewport(0, attachmentSize.Height, attachmentSize.Width, -attachmentSize.Height, 0, 1);
         _vk.CmdSetViewport(Buffer, 0, 1, &viewport);
 
         Rect2D scissor = renderingInfo.RenderArea;
@@ -121,10 +123,39 @@ internal sealed unsafe class VulkanCommandList : CommandList
         VulkanPipeline vkPipeline = (VulkanPipeline) pipeline;
         _vk.CmdBindPipeline(Buffer, PipelineBindPoint.Graphics, vkPipeline.Pipeline);
     }
+
+    public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+        VkBuffer buf = vkBuffer.Buffer;
+        // eeewwww
+        ulong lStride = stride;
+        ulong lOffset = offset;
+        _vk.CmdBindVertexBuffers2(Buffer, slot, 1, &buf, &lOffset, null, &lStride);
+    }
     
+    public override void SetIndexBuffer(Buffer buffer, Format format, uint offset = 0)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+
+        IndexType type = format switch
+        {
+            Format.R16_UInt => IndexType.Uint16,
+            Format.R32_UInt => IndexType.Uint32,
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+        };
+        
+        _vk.CmdBindIndexBuffer(Buffer, vkBuffer.Buffer, offset, type);
+    }
+
     public override void Draw(uint numVertices)
     {
         _vk.CmdDraw(Buffer, numVertices, 1, 0, 0);
+    }
+
+    public override void DrawIndexed(uint numIndices)
+    {
+        _vk.CmdDrawIndexed(Buffer, numIndices, 1, 0, 0, 0);
     }
 
     public override void Dispose()

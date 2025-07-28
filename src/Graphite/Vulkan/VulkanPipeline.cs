@@ -48,9 +48,35 @@ internal sealed unsafe class VulkanPipeline : Pipeline
             PName = pPixelEntryPoint
         };
 
+        VertexInputAttributeDescription* vertexAttributes =
+            stackalloc VertexInputAttributeDescription[info.InputLayout.Length];
+
+        for (int i = 0; i < info.InputLayout.Length; i++)
+        {
+            ref readonly InputElementDescription element = ref info.InputLayout[i];
+
+            vertexAttributes[i] = new VertexInputAttributeDescription
+            {
+                Format = element.Format.ToVk(),
+                Offset = element.Offset,
+                Location = element.Location,
+                Binding = element.Slot
+            };
+        }
+
+        VertexInputBindingDescription vertexBinding = new()
+        {
+            Binding = 0,
+            InputRate = VertexInputRate.Vertex
+        };
+        
         PipelineVertexInputStateCreateInfo vertexInputState = new()
         {
-            SType = StructureType.PipelineVertexInputStateCreateInfo
+            SType = StructureType.PipelineVertexInputStateCreateInfo,
+            VertexAttributeDescriptionCount = (uint) info.InputLayout.Length,
+            PVertexAttributeDescriptions = vertexAttributes,
+            VertexBindingDescriptionCount = 1,
+            PVertexBindingDescriptions = &vertexBinding
         };
 
         PipelineInputAssemblyStateCreateInfo inputAssemblyState = new()
@@ -117,14 +143,24 @@ internal sealed unsafe class VulkanPipeline : Pipeline
             PColorAttachmentFormats = formats
         };
 
-        DynamicState* states = stackalloc DynamicState[2];
+        uint numDynamicStates = 2;
+        DynamicState* states = stackalloc DynamicState[3];
         states[0] = DynamicState.Viewport;
         states[1] = DynamicState.Scissor;
+
+        // Only set the dynamic state if an input layout is defined (meaning that a vertex buffer will be bound).
+        // The vulkan spec requires a vertex buffer to be bound if this dynamic state is set, meaning that a draw
+        // command may fail if a vertex buffer has not previously been bound.
+        if (info.InputLayout.Length > 0)
+        {
+            numDynamicStates = 3;
+            states[2] = DynamicState.VertexInputBindingStride;
+        }
 
         PipelineDynamicStateCreateInfo dynamicState = new()
         {
             SType = StructureType.PipelineDynamicStateCreateInfo,
-            DynamicStateCount = 2,
+            DynamicStateCount = numDynamicStates,
             PDynamicStates = states
         };
 

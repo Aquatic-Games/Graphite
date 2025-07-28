@@ -8,10 +8,14 @@ public ref struct GraphicsPipelineInfo
 
     public ReadOnlySpan<ColorTargetInfo> ColorTargets;
 
-    public GraphicsPipelineInfo(ShaderModule vertexShader, ShaderModule pixelShader, in ReadOnlySpan<ColorTargetInfo> colorTargets)
+    public ReadOnlySpan<InputElementDescription> InputLayout;
+
+    public GraphicsPipelineInfo(ShaderModule vertexShader, ShaderModule pixelShader,
+        ReadOnlySpan<ColorTargetInfo> colorTargets, ReadOnlySpan<InputElementDescription> inputLayout)
     {
         VertexShader = vertexShader;
         PixelShader = pixelShader;
         ColorTargets = colorTargets;
+        InputLayout = inputLayout;
     }
 }

@@ -1,21 +1,26 @@
-float4 VSMain(const in uint id: SV_VertexID): SV_Position
+struct VSInput
 {
-    const float2 positions[] = {
-        float2(-0.5, +0.5),
-        float2(+0.5, +0.5),
-        float2(+0.5, -0.5),
-        float2(-0.5, -0.5)
-    };
+    float2 Position: POSITION0;
+    float3 Color:    COLOR0;
+};
 
-    const uint indices[] = {
-        0, 1, 3,
-        1, 2, 3
-    };
+struct VSOutput
+{
+    float4 Position: SV_Position;
+    float3 Color:    COLOR0;
+};
 
-    return float4(positions[indices[id]], 0.0, 1.0);
+VSOutput VSMain(const in VSInput input)
+{
+    VSOutput output;
+
+    output.Position = float4(input.Position, 0.0, 1.0);
+    output.Color = input.Color;
+    
+    return output;
 }
 
-float4 PSMain(): SV_Target0
+float4 PSMain(const in VSOutput input): SV_Target0
 {
-    return float4(1.0, 0.5, 0.25, 1.0);
+    return float4(input.Color, 1.0);
 }
