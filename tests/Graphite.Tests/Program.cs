@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
 using Graphite.Vulkan;
@@ -70,15 +71,36 @@ ReadOnlySpan<float> vertices =
     +0.5f, -0.5f, 0.0f, 0.0f, 0.0f
 ];
 
-ReadOnlySpan<uint> indices =
+ReadOnlySpan<ushort> indices =
 [
     0, 1, 3,
     1, 2, 3
 ];
 
-Buffer vertexBuffer =
-    device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, (uint) vertices.Length * sizeof(float)));
-Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, (uint) indices.Length * sizeof(uint)));
+uint vertexSize = (uint) vertices.Length * sizeof(float);
+uint indexSize = (uint) indices.Length * sizeof(ushort);
+
+Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
+Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
+
+Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize));
+nint mappedBuffer = device.MapBuffer(transferBuffer);
+unsafe
+{
+    fixed (float* pVertices = vertices)
+        Unsafe.CopyBlock((byte*) mappedBuffer, pVertices, vertexSize);
+    fixed (ushort* pIndices = indices)
+        Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize, pIndices, indexSize);
+}
+device.UnmapBuffer(transferBuffer);
+
+cl.Begin();
+cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
+cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
+cl.End();
+device.ExecuteCommandList(cl);
+
+transferBuffer.Dispose();
 
 byte[] vShader = File.ReadAllBytes("Shader_v.spv");
 byte[] pShader = File.ReadAllBytes("Shader_p.spv");

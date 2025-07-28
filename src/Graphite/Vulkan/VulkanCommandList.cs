@@ -50,6 +50,21 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.EndCommandBuffer(Buffer).Check("End command buffer");
     }
 
+    public override void CopyBufferToBuffer(Buffer src, uint srcOffset, Buffer dest, uint destOffset, uint copySize = 0)
+    {
+        VulkanBuffer vkSrc = (VulkanBuffer) src;
+        VulkanBuffer vkDest = (VulkanBuffer) dest;
+
+        BufferCopy copy = new()
+        {
+            SrcOffset = srcOffset,
+            DstOffset = destOffset,
+            Size = copySize == 0 ? dest.Info.SizeInBytes : copySize
+        };
+
+        _vk.CmdCopyBuffer(Buffer, vkSrc.Buffer, vkDest.Buffer, 1, &copy);
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         RenderingAttachmentInfo* colorRenderingAttachments = stackalloc RenderingAttachmentInfo[colorAttachments.Length];

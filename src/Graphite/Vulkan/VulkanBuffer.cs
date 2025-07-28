@@ -16,7 +16,7 @@ internal sealed unsafe class VulkanBuffer : Buffer
     public readonly Allocation* Allocation;
     public readonly VkBuffer Buffer;
 
-    public VulkanBuffer(Vk vk, VkDevice device, Allocator* allocator, ref readonly BufferInfo info)
+    public VulkanBuffer(Vk vk, VkDevice device, Allocator* allocator, ref readonly BufferInfo info) : base(info)
     {
         _vk = vk;
         _device = device;

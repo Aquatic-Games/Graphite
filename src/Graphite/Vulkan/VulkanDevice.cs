@@ -220,6 +220,20 @@ internal sealed unsafe class VulkanDevice : Device
         _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
     }
 
+    public override IntPtr MapBuffer(Buffer buffer)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+        void* mappedMemory;
+        Vma.MapMemory(_allocator, vkBuffer.Allocation, &mappedMemory).Check("Map memory");
+        return (nint) mappedMemory;
+    }
+    
+    public override void UnmapBuffer(Buffer buffer)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+        Vma.UnmapMemory(_allocator, vkBuffer.Allocation);
+    }
+
     public override void Dispose()
     {
         GraphiteLog.Log("Destroying allocator.");

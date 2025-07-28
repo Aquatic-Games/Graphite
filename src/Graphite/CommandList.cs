@@ -8,6 +8,8 @@ public abstract class CommandList : IDisposable
 
     public abstract void End();
 
+    public abstract void CopyBufferToBuffer(Buffer src, uint srcOffset, Buffer dest, uint destOffset, uint copySize = 0);
+
     public abstract void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments);
 
     public abstract void EndRenderPass();

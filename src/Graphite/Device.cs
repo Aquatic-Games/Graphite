@@ -13,6 +13,10 @@ public abstract class Device : IDisposable
     public abstract Buffer CreateBuffer(in BufferInfo info);
 
     public abstract void ExecuteCommandList(CommandList cl);
+
+    public abstract nint MapBuffer(Buffer buffer);
+
+    public abstract void UnmapBuffer(Buffer buffer);
     
     public abstract void Dispose();
 }
