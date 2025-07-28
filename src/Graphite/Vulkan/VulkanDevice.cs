@@ -167,6 +167,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanShaderModule(_vk, Device, data, entryPoint);
     }
 
+    public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)
+    {
+        return new VulkanPipeline(_vk, Device, in info);
+    }
+
     public override void ExecuteCommandList(CommandList cl)
     {
         VulkanCommandList vulkanCl = (VulkanCommandList) cl;

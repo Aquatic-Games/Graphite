@@ -17,5 +17,5 @@ float4 VSMain(const in uint id: SV_VertexID): SV_Position
 
 float4 PSMain(): SV_Target0
 {
-    return float4(0.25, 0.5, 1.0, 1.0);
+    return float4(1.0, 0.5, 0.25, 1.0);
 }

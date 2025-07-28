@@ -67,6 +67,10 @@ byte[] pShader = File.ReadAllBytes("Shader_p.spv");
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
+Pipeline pipeline =
+    device.CreateGraphicsPipeline(new GraphicsPipelineInfo(vertexShader, pixelShader,
+        [new ColorTargetInfo(Format.B8G8R8A8_UNorm)]));
+
 pixelShader.Dispose();
 vertexShader.Dispose();
 
@@ -87,6 +91,10 @@ while (alive)
     
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
+    
+    cl.SetGraphicsPipeline(pipeline);
+    cl.Draw(6);
+    
     cl.EndRenderPass();
     cl.End();
     
@@ -94,6 +102,7 @@ while (alive)
     swapchain.Present();
 }
 
+pipeline.Dispose();
 swapchain.Dispose();
 cl.Dispose();
 device.Dispose();
