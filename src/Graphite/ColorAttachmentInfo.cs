@@ -1,6 +1,6 @@
 using Graphite.Core;
 
-namespace Graphite.Vulkan;
+namespace Graphite;
 
 public struct ColorAttachmentInfo
 {

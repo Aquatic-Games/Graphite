@@ -2,7 +2,6 @@
 using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
-using Graphite.Vulkan;
 using SDL3;
 using Buffer = Graphite.Buffer;
 
