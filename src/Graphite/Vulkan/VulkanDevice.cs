@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Core;
+using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
@@ -125,11 +126,23 @@ internal sealed unsafe class VulkanDevice : Device
         GraphiteLog.Log("Allocating single-time buffer.");
         _vk.AllocateCommandBuffers(Device, &allocInfo, out _singleTimeBuffer);
 
+        VmaVulkanFunctions functions = new()
+        {
+            vkGetInstanceProcAddr =
+                (delegate* unmanaged[Cdecl]<VkInstance, sbyte*, delegate* unmanaged[Cdecl]<void>>) SilkMarshal
+                    .DelegateToPtr(GetInstanceProcAddrFunc),
+            vkGetDeviceProcAddr =
+                (delegate* unmanaged[Cdecl]<VkDevice, sbyte*, delegate* unmanaged[Cdecl]<void>>) SilkMarshal
+                    .DelegateToPtr(GetDeviceProcAddrFunc)
+        };
+        
         AllocatorCreateInfo allocatorInfo = new()
         {
             instance = Instance,
             device = Device,
-            physicalDevice = PhysicalDevice
+            physicalDevice = PhysicalDevice,
+            pVulkanFunctions = &functions,
+            vulkanApiVersion = Vk.Version13
         };
         
         GraphiteLog.Log("Creating allocator.");
@@ -186,7 +199,7 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override Buffer CreateBuffer(in BufferInfo info)
     {
-        
+        return new VulkanBuffer(_vk, Device, _allocator, in info);
     }
 
     public override void ExecuteCommandList(CommandList cl)
@@ -217,5 +230,15 @@ internal sealed unsafe class VulkanDevice : Device
         
         GraphiteLog.Log("Destroying device.");
         _vk.DestroyDevice(Device, null);
+    }
+
+    private nint GetInstanceProcAddrFunc(VkInstance instance, byte* pName)
+    {
+        return _vk.GetInstanceProcAddr(instance, pName);
+    }
+    
+    private nint GetDeviceProcAddrFunc(VkDevice device, byte* pName)
+    {
+        return _vk.GetDeviceProcAddr(device, pName);
     }
 }

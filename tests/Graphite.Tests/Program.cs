@@ -3,6 +3,7 @@ using Graphite;
 using Graphite.Core;
 using Graphite.Vulkan;
 using SDL3;
+using Buffer = Graphite.Buffer;
 
 GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 {
@@ -61,6 +62,24 @@ Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
+ReadOnlySpan<float> vertices =
+[
+    -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+    -0.5f, +0.5f, 0.0f, 1.0f, 0.0f,
+    +0.5f, +0.5f, 0.0f, 0.0f, 1.0f,
+    +0.5f, -0.5f, 0.0f, 0.0f, 0.0f
+];
+
+ReadOnlySpan<uint> indices =
+[
+    0, 1, 3,
+    1, 2, 3
+];
+
+Buffer vertexBuffer =
+    device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, (uint) vertices.Length * sizeof(float)));
+Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, (uint) indices.Length * sizeof(uint)));
+
 byte[] vShader = File.ReadAllBytes("Shader_v.spv");
 byte[] pShader = File.ReadAllBytes("Shader_p.spv");
 
@@ -103,6 +122,8 @@ while (alive)
 }
 
 pipeline.Dispose();
+indexBuffer.Dispose();
+vertexBuffer.Dispose();
 swapchain.Dispose();
 cl.Dispose();
 device.Dispose();
