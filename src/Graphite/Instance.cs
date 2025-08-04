@@ -1,4 +1,5 @@
-﻿using Graphite.Vulkan;
+﻿using Graphite.D3D11;
+using Graphite.Vulkan;
 
 namespace Graphite;
 /// <summary>
@@ -42,6 +43,9 @@ public abstract class Instance : IDisposable
     /// <returns>The created <see cref="Instance"/>.</returns>
     public static Instance Create(in InstanceInfo info)
     {
+        if (OperatingSystem.IsWindows())
+            return new D3D11Instance(in info);
+        
         return new VulkanInstance(in info);
     }
 }
