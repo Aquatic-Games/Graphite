@@ -17,9 +17,15 @@ internal sealed unsafe class VulkanPipeline : Pipeline
         _vk = vk;
         _device = device;
 
+        DescriptorSetLayout* descriptorLayouts = stackalloc DescriptorSetLayout[info.Descriptors.Length];
+        for (int i = 0; i < info.Descriptors.Length; i++)
+            descriptorLayouts[i] = ((VulkanDescriptorLayout) info.Descriptors[i]).Layout;
+        
         PipelineLayoutCreateInfo layoutInfo = new()
         {
-            SType = StructureType.PipelineLayoutCreateInfo
+            SType = StructureType.PipelineLayoutCreateInfo,
+            SetLayoutCount = (uint) info.Descriptors.Length,
+            PSetLayouts = descriptorLayouts
         };
         
         GraphiteLog.Log("Creating pipeline layout.");

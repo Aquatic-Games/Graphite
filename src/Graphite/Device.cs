@@ -12,6 +12,8 @@ public abstract class Device : IDisposable
 
     public abstract Buffer CreateBuffer(in BufferInfo info);
 
+    public abstract DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings);
+
     public abstract void ExecuteCommandList(CommandList cl);
 
     public abstract nint MapBuffer(Buffer buffer);

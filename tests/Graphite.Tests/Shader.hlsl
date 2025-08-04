@@ -10,11 +10,16 @@ struct VSOutput
     float3 Color:    COLOR0;
 };
 
+cbuffer TransformMatrix : register(b0, space0)
+{
+    float4x4 Transform;
+}
+
 VSOutput VSMain(const in VSInput input)
 {
     VSOutput output;
 
-    output.Position = float4(input.Position, 0.0, 1.0);
+    output.Position = mul(Transform, float4(input.Position, 0.0, 1.0));
     output.Color = input.Color;
     
     return output;

@@ -107,6 +107,9 @@ byte[] pShader = File.ReadAllBytes("Shader_p.spv");
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
+DescriptorLayout transformLayout =
+    device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
+
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
     VertexShader = vertexShader,
@@ -116,7 +119,8 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
-    ]
+    ],
+    Descriptors = [transformLayout]
 });
 
 pixelShader.Dispose();
@@ -153,6 +157,7 @@ while (alive)
 }
 
 pipeline.Dispose();
+transformLayout.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();
 swapchain.Dispose();

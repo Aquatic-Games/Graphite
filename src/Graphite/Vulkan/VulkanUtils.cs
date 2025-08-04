@@ -1,4 +1,5 @@
 global using VkFormat = Silk.NET.Vulkan.Format;
+global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
 
@@ -111,6 +112,15 @@ internal static class VulkanUtils
         {
             StoreOp.Store => AttachmentStoreOp.Store,
             _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+        };
+    }
+
+    public static VkDescriptorType ToVk(this DescriptorType type)
+    {
+        return type switch
+        {
+            DescriptorType.ConstantBuffer => VkDescriptorType.UniformBuffer,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
 }
