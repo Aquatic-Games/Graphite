@@ -207,6 +207,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanDescriptorLayout(_vk, Device, bindings);
     }
 
+    public override DescriptorSet CreateDescriptorSet(params ReadOnlySpan<DescriptorLayout> layouts)
+    {
+        return new VulkanDescriptorSet(_vk, Device, layouts);
+    }
+
     public override void ExecuteCommandList(CommandList cl)
     {
         VulkanCommandList vulkanCl = (VulkanCommandList) cl;

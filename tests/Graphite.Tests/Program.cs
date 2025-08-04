@@ -109,6 +109,7 @@ ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
 DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
+DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout);
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -157,6 +158,7 @@ while (alive)
 }
 
 pipeline.Dispose();
+transformSet.Dispose();
 transformLayout.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();

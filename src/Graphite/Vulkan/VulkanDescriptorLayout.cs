@@ -3,12 +3,14 @@ using Silk.NET.Vulkan;
 
 namespace Graphite.Vulkan;
 
-internal unsafe class VulkanDescriptorLayout : DescriptorLayout
+internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
 {
     private readonly Vk _vk;
     private readonly VkDevice _device;
 
-    public DescriptorSetLayout Layout;
+    public readonly DescriptorSetLayout Layout;
+
+    public readonly VkDescriptorType Type;
     
     public VulkanDescriptorLayout(Vk vk, VkDevice device, ReadOnlySpan<DescriptorBinding> bindings)
     {
@@ -21,6 +23,7 @@ internal unsafe class VulkanDescriptorLayout : DescriptorLayout
             ref readonly DescriptorBinding binding = ref bindings[i];
 
             ShaderStageFlags shaderFlags = ShaderStageFlags.None;
+            Type = binding.Type.ToVk();
 
             if ((binding.Stages & ShaderStage.Vertex) != 0)
                 shaderFlags |= ShaderStageFlags.VertexBit;
@@ -31,7 +34,7 @@ internal unsafe class VulkanDescriptorLayout : DescriptorLayout
             {
                 Binding = binding.Binding,
                 DescriptorCount = 1,
-                DescriptorType = binding.Type.ToVk(),
+                DescriptorType = Type,
                 StageFlags = shaderFlags
             };
         }
