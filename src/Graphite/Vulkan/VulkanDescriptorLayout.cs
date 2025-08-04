@@ -8,14 +8,14 @@ internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
     private readonly Vk _vk;
     private readonly VkDevice _device;
 
+    public readonly Dictionary<VkDescriptorType, uint> DescriptorCounts;
     public readonly DescriptorSetLayout Layout;
-
-    public readonly VkDescriptorType Type;
     
     public VulkanDescriptorLayout(Vk vk, VkDevice device, ReadOnlySpan<DescriptorBinding> bindings)
     {
         _vk = vk;
         _device = device;
+        DescriptorCounts = [];
 
         DescriptorSetLayoutBinding* vkBindings = stackalloc DescriptorSetLayoutBinding[bindings.Length];
         for (int i = 0; i < bindings.Length; i++)
@@ -23,7 +23,7 @@ internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
             ref readonly DescriptorBinding binding = ref bindings[i];
 
             ShaderStageFlags shaderFlags = ShaderStageFlags.None;
-            Type = binding.Type.ToVk();
+            VkDescriptorType type = binding.Type.ToVk();
 
             if ((binding.Stages & ShaderStage.Vertex) != 0)
                 shaderFlags |= ShaderStageFlags.VertexBit;
@@ -34,9 +34,15 @@ internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
             {
                 Binding = binding.Binding,
                 DescriptorCount = 1,
-                DescriptorType = Type,
+                DescriptorType = type,
                 StageFlags = shaderFlags
             };
+
+            // Is there a better way to do this or am I being stupid?
+            if (!DescriptorCounts.TryGetValue(type, out uint count))
+                count = 0;
+            count++;
+            DescriptorCounts[type] = count;
         }
 
         DescriptorSetLayoutCreateInfo layoutInfo = new()

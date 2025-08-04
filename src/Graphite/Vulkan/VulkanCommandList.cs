@@ -124,6 +124,14 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.CmdBindPipeline(Buffer, PipelineBindPoint.Graphics, vkPipeline.Pipeline);
     }
 
+    public override void SetDescriptorSet(uint slot, Pipeline pipeline, DescriptorSet set)
+    {
+        VulkanPipeline vkPipeline = (VulkanPipeline) pipeline;
+        VulkanDescriptorSet vkSet = (VulkanDescriptorSet) set;
+        VkDescriptorSet s = vkSet.Set;
+        _vk.CmdBindDescriptorSets(Buffer, PipelineBindPoint.Graphics, vkPipeline.Layout, slot, 1, &s, 0, null);
+    }
+
     public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
     {
         VulkanBuffer vkBuffer = (VulkanBuffer) buffer;

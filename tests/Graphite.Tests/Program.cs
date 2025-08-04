@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
@@ -78,11 +79,13 @@ ReadOnlySpan<ushort> indices =
 
 uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
+uint cBufferSize = 64;
 
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
+Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer, cBufferSize));
 
-Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize));
+Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
 unsafe
 {
@@ -90,12 +93,15 @@ unsafe
         Unsafe.CopyBlock((byte*) mappedBuffer, pVertices, vertexSize);
     fixed (ushort* pIndices = indices)
         Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize, pIndices, indexSize);
+    Matrix4x4 identity = Matrix4x4.CreateTranslation(0.25f, 0.1f, 0);
+    Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize, Unsafe.AsPointer(ref identity), cBufferSize);
 }
 device.UnmapBuffer(transferBuffer);
 
 cl.Begin();
 cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
+cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
 cl.End();
 device.ExecuteCommandList(cl);
 
@@ -109,7 +115,7 @@ ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
 DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
-DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout);
+DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -146,6 +152,7 @@ while (alive)
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
+    cl.SetDescriptorSet(0, pipeline, transformSet);
     cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
@@ -160,6 +167,7 @@ while (alive)
 pipeline.Dispose();
 transformSet.Dispose();
 transformLayout.Dispose();
+constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();
 swapchain.Dispose();

@@ -207,9 +207,9 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanDescriptorLayout(_vk, Device, bindings);
     }
 
-    public override DescriptorSet CreateDescriptorSet(params ReadOnlySpan<DescriptorLayout> layouts)
+    public override DescriptorSet CreateDescriptorSet(DescriptorLayout layout, params ReadOnlySpan<Descriptor> descriptors)
     {
-        return new VulkanDescriptorSet(_vk, Device, layouts);
+        return new VulkanDescriptorSet(_vk, Device, layout, descriptors);
     }
 
     public override void ExecuteCommandList(CommandList cl)
