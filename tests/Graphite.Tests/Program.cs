@@ -19,7 +19,7 @@ if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
 const int width = 1280;
 const int height = 720;
 
-IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, 0);
+IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, SDL.WindowFlags.Resizable);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
 
