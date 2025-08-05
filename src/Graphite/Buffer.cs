@@ -1,5 +1,8 @@
 namespace Graphite;
 
+/// <summary>
+/// A region of GPU memory that can be used for various purposes.
+/// </summary>
 public abstract class Buffer : IDisposable
 {
     public readonly BufferInfo Info;

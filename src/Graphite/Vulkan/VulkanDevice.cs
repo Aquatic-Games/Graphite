@@ -22,7 +22,9 @@ internal sealed unsafe class VulkanDevice : Device
     public readonly PhysicalDevice PhysicalDevice;
     public readonly Queues Queues;
     public readonly VkDevice Device;
-    
+
+    public override Backend Backend => Backend.Vulkan;
+
     public VulkanDevice(Vk vk, VkInstance instance, VulkanSurface surface, PhysicalDevice physicalDevice)
     {
         _vk = vk;
@@ -188,9 +190,9 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanCommandList(_vk, Device, _pool);
     }
 
-    public override ShaderModule CreateShaderModule(byte[] data, string entryPoint)
+    public override ShaderModule CreateShaderModule(byte[] code, string entryPoint)
     {
-        return new VulkanShaderModule(_vk, Device, data, entryPoint);
+        return new VulkanShaderModule(_vk, Device, code, entryPoint);
     }
 
     public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)

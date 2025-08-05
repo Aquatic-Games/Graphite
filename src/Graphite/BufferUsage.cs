@@ -1,5 +1,8 @@
 namespace Graphite;
 
+/// <summary>
+/// Contains flags describing how a <see cref="Buffer"/> may be used on the GPU.
+/// </summary>
 [Flags]
 public enum BufferUsage
 {
@@ -35,7 +38,7 @@ public enum BufferUsage
     TransferBuffer = 1 << 4,
     
     /// <summary>
-    /// This buffer can be mapped into CPU-accessible memory for writing.
+    /// This buffer can be mapped into CPU-addressable memory for writing.
     /// </summary>
     MapWrite = 1 << 8
 }

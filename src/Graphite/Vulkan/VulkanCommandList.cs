@@ -156,14 +156,14 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.CmdBindIndexBuffer(Buffer, vkBuffer.Buffer, offset, type);
     }
 
-    public override void Draw(uint numVertices)
+    public override void Draw(uint numVertices, uint firstVertex = 0)
     {
-        _vk.CmdDraw(Buffer, numVertices, 1, 0, 0);
+        _vk.CmdDraw(Buffer, numVertices, 1, firstVertex, 0);
     }
 
-    public override void DrawIndexed(uint numIndices)
+    public override void DrawIndexed(uint numIndices, uint firstIndex = 0, int baseVertex = 0)
     {
-        _vk.CmdDrawIndexed(Buffer, numIndices, 1, 0, 0, 0);
+        _vk.CmdDrawIndexed(Buffer, numIndices, 1, firstIndex, baseVertex, 0);
     }
 
     public override void Dispose()
