@@ -8,6 +8,11 @@ namespace Graphite;
 public abstract class Instance : IDisposable
 {
     /// <summary>
+    /// The API <see cref="Graphite.Backend"/> of this instance.
+    /// </summary>
+    public abstract Backend Backend { get; }
+    
+    /// <summary>
     /// Enumerate the supported <see cref="Adapter"/>s present on the system.
     /// </summary>
     /// <returns>The enumerated <see cref="Adapter"/>s.</returns>

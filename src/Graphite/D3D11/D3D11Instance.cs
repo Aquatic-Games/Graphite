@@ -12,13 +12,15 @@ internal sealed unsafe class D3D11Instance : Instance
 {
     private readonly IDXGIFactory1* _factory;
 
+    public override Backend Backend => Backend.D3D11;
+    
     public D3D11Instance(ref readonly InstanceInfo info)
     {
         GraphiteLog.Log("Creating DXGI factory.");
         fixed (IDXGIFactory1** factory = &_factory)
             CreateDXGIFactory1(__uuidof<IDXGIFactory1>(), (void**) factory).Check("Create DXGI factory");
     }
-    
+
     public override Adapter[] EnumerateAdapters()
     {
         throw new NotImplementedException();

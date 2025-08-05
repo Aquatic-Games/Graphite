@@ -14,6 +14,8 @@ internal sealed unsafe class VulkanInstance : Instance
     private readonly ExtDebugUtils? _debugUtilsExt;
     private readonly DebugUtilsMessengerEXT _debugMessenger;
     
+    public override Backend Backend => Backend.Vulkan;
+    
     public VulkanInstance(ref readonly InstanceInfo info)
     {
         _vk = Vk.GetApi();
