@@ -83,7 +83,7 @@ uint cBufferSize = 64;
 
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
-Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer, cBufferSize));
+Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
 
 Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
@@ -93,7 +93,7 @@ unsafe
         Unsafe.CopyBlock((byte*) mappedBuffer, pVertices, vertexSize);
     fixed (ushort* pIndices = indices)
         Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize, pIndices, indexSize);
-    Matrix4x4 identity = Matrix4x4.CreateTranslation(0.25f, 0.1f, 0);
+    Matrix4x4 identity = Matrix4x4.Identity;
     Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize, Unsafe.AsPointer(ref identity), cBufferSize);
 }
 device.UnmapBuffer(transferBuffer);
@@ -133,6 +133,8 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 pixelShader.Dispose();
 vertexShader.Dispose();
 
+float value = 0;
+
 bool alive = true;
 while (alive)
 {
@@ -147,6 +149,14 @@ while (alive)
     }
 
     Texture texture = swapchain.GetNextTexture();
+
+    nint map = device.MapBuffer(constantBuffer);
+    Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
+    unsafe { Unsafe.CopyBlock((void*) map, Unsafe.AsPointer(ref matrix), 64); }
+    device.UnmapBuffer(constantBuffer);
+    value += 0.01f;
+    if (value >= float.Pi * 2)
+        value -= float.Pi * 2;
     
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);

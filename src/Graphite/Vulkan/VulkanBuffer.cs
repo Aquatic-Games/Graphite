@@ -16,6 +16,8 @@ internal sealed unsafe class VulkanBuffer : Buffer
     public readonly Allocation* Allocation;
     public readonly VkBuffer Buffer;
 
+    public readonly bool IsMappable;
+
     public VulkanBuffer(Vk vk, VkDevice device, Allocator* allocator, ref readonly BufferInfo info) : base(info)
     {
         _vk = vk;
@@ -41,6 +43,13 @@ internal sealed unsafe class VulkanBuffer : Buffer
         {
             usage |= BufferUsageFlags.TransferSrcBit;
             allocInfo.flags |= (uint) VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+            IsMappable = true;
+        }
+
+        if ((info.Usage & BufferUsage.MapWrite) != 0)
+        {
+            allocInfo.flags |= (uint) VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+            IsMappable = true;
         }
 
         BufferCreateInfo bufferInfo = new()

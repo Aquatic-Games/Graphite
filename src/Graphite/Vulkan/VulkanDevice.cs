@@ -1,4 +1,5 @@
 global using VkDevice = Silk.NET.Vulkan.Device;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
@@ -233,6 +234,8 @@ internal sealed unsafe class VulkanDevice : Device
     public override IntPtr MapBuffer(Buffer buffer)
     {
         VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+        Debug.Assert(vkBuffer.IsMappable);
+        
         void* mappedMemory;
         Vma.MapMemory(_allocator, vkBuffer.Allocation, &mappedMemory).Check("Map memory");
         return (nint) mappedMemory;

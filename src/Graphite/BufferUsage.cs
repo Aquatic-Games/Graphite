@@ -4,7 +4,7 @@ namespace Graphite;
 public enum BufferUsage
 {
     /// <summary>
-    /// This buffer will not be used.
+    /// This buffer will not be used. Its pure purpose is to waste GPU memory and make the other buffers jealous.
     /// </summary>
     None = 0,
     
@@ -31,5 +31,11 @@ public enum BufferUsage
     /// <summary>
     /// This buffer will be used as a transfer source buffer.
     /// </summary>
-    TransferBuffer = 1 << 4
+    /// <remarks>You do <b>NOT</b> need to provide any Map* flags, as Transfer buffers are inherently mappable.</remarks>
+    TransferBuffer = 1 << 4,
+    
+    /// <summary>
+    /// This buffer can be mapped into CPU-accessible memory for writing.
+    /// </summary>
+    MapWrite = 1 << 8
 }
