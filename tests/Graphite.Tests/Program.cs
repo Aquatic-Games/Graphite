@@ -77,7 +77,11 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-uint vertexSize = (uint) vertices.Length * sizeof(float);
+Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
+Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
+
+/*uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
 uint cBufferSize = 64;
 
@@ -105,7 +109,7 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();
+transferBuffer.Dispose();*/
 
 byte[] vShader = File.ReadAllBytes("Shader_v.spv");
 byte[] pShader = File.ReadAllBytes("Shader_p.spv");

@@ -198,9 +198,9 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanPipeline(_vk, Device, in info);
     }
 
-    public override Buffer CreateBuffer(in BufferInfo info)
+    public override Buffer CreateBuffer(in BufferInfo info, void* data)
     {
-        return new VulkanBuffer(_vk, Device, _allocator, in info);
+        return new VulkanBuffer(_vk, this, _allocator, in info, data);
     }
 
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)

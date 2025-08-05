@@ -1,4 +1,5 @@
 global using VkBuffer = Silk.NET.Vulkan.Buffer;
+using System.Runtime.CompilerServices;
 using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Vulkan;
@@ -18,10 +19,10 @@ internal sealed unsafe class VulkanBuffer : Buffer
 
     public readonly bool IsMappable;
 
-    public VulkanBuffer(Vk vk, VkDevice device, Allocator* allocator, ref readonly BufferInfo info) : base(info)
+    public VulkanBuffer(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly BufferInfo info, void* data) : base(info)
     {
         _vk = vk;
-        _device = device;
+        _device = device.Device;
         _allocator = allocator;
         
         AllocationCreateInfo allocInfo = new()
@@ -61,6 +62,59 @@ internal sealed unsafe class VulkanBuffer : Buffer
         
         GraphiteLog.Log("Creating buffer.");
         Vma.CreateBuffer(_allocator, &bufferInfo, &allocInfo, out Buffer, out Allocation, null).Check("Create buffer");
+
+        if (data == null)
+            return;
+
+        if (IsMappable)
+        {
+            void* mappedData;
+            GraphiteLog.Log("Mapping buffer and copying data.");
+            Vma.MapMemory(_allocator, Allocation, &mappedData).Check("Map buffer");
+            Unsafe.CopyBlock(mappedData, data, info.SizeInBytes);
+            Vma.UnmapMemory(_allocator, Allocation);
+            return;
+        }
+        
+        // Create a new transfer buffer and copy the data.
+        // This is quite inefficient as a transfer buffer is created for each buffer we are creating.
+        // TODO: VulkanDevice.GetFreeTransferBuffer(uint size) with a transfer buffer pool?
+        
+        AllocationCreateInfo transferAllocInfo = new()
+        {
+            usage = VMA_MEMORY_USAGE_AUTO,
+            flags = (uint) VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | (uint) VMA_ALLOCATION_CREATE_MAPPED_BIT
+        };
+
+        BufferCreateInfo transferInfo = new()
+        {
+            SType = StructureType.BufferCreateInfo,
+            Usage = BufferUsageFlags.TransferSrcBit,
+            Size = info.SizeInBytes
+        };
+        
+        GraphiteLog.Log("Creating transfer buffer.");
+        // please help I ran out of names
+        VmaAllocationInfo tInfo;
+        Vma.CreateBuffer(_allocator, &transferInfo, &transferAllocInfo, out VkBuffer transferBuffer,
+            out Allocation* transferAlloc, &tInfo).Check("Create transfer buffer");
+        
+        Unsafe.CopyBlock(tInfo.pMappedData, data, info.SizeInBytes);
+
+        CommandBuffer cb = device.BeginCommands();
+        
+        BufferCopy copy = new()
+        {
+            Size = info.SizeInBytes
+        };
+        
+        GraphiteLog.Log($"Copying {copy.Size} bytes from transfer buffer to buffer.");
+        _vk.CmdCopyBuffer(cb, transferBuffer, Buffer, 1, &copy);
+        
+        device.EndCommands();
+        
+        GraphiteLog.Log("Destroying transfer buffer.");
+        Vma.DestroyBuffer(_allocator, transferBuffer, transferAlloc);
     }
     
     public override void Dispose()
