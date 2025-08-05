@@ -46,11 +46,14 @@ public abstract class Device : IDisposable
     ///         <description>GLSL</description>
     ///     </item>
     /// </list>
+    /// In order to translate vertex input and descriptors for backends that may not support them, you must provide the
+    /// <paramref name="mapping"/> parameter.
     /// </summary>
     /// <param name="code">The shader bytecode/string.</param>
     /// <param name="entryPoint">The entry point of the shader.</param>
+    /// <param name="mapping">The shader mapping to other backends, if appropriate.</param>
     /// <returns>The created <see cref="ShaderModule"/>.</returns>
-    public abstract ShaderModule CreateShaderModule(byte[] code, string entryPoint);
+    public abstract ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default);
 
     /// <summary>
     /// Create a graphics <see cref="Pipeline"/>.
