@@ -58,7 +58,7 @@ else
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
-CommandList cl = device.CreateCommandList();
+/*CommandList cl = device.CreateCommandList();
 Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
@@ -109,7 +109,7 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();*/
+transferBuffer.Dispose();
 
 byte[] vShader = File.ReadAllBytes("Shader_v.spv");
 byte[] pShader = File.ReadAllBytes("Shader_p.spv");
@@ -185,7 +185,7 @@ constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();
 swapchain.Dispose();
-cl.Dispose();
+cl.Dispose();*/
 device.Dispose();
 surface.Dispose();
 instance.Dispose();

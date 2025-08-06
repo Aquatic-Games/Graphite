@@ -49,11 +49,22 @@ internal sealed unsafe class D3D11Instance : Instance
     
     public override Device CreateDevice(Surface surface, Adapter? adapter = null)
     {
-        throw new NotImplementedException();
+        IDXGIAdapter1* dxgiAdapter;
+
+        if (adapter is { } adp)
+            dxgiAdapter = (IDXGIAdapter1*) adp.Handle;
+        else
+        {
+            Adapter[] adapters = EnumerateAdapters();
+            dxgiAdapter = (IDXGIAdapter1*) adapters[0].Handle;
+        }
+
+        return new D3D11Device(_factory, dxgiAdapter, _debug);
     }
     
     public override void Dispose()
     {
+        GraphiteLog.Log("Releasing factory.");
         _factory->Release();
     }
 }
