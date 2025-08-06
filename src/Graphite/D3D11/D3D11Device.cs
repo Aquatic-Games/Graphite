@@ -39,7 +39,7 @@ internal sealed unsafe class D3D11Device : Device
     
     public override Swapchain CreateSwapchain(in SwapchainInfo info)
     {
-        throw new NotImplementedException();
+        return new D3D11Swapchain(_factory, _device, in info);
     }
     
     public override CommandList CreateCommandList()

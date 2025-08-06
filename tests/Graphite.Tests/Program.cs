@@ -59,11 +59,11 @@ else
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
 CommandList cl = device.CreateCommandList();
-/*Swapchain swapchain =
+Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
-ReadOnlySpan<float> vertices =
+/*ReadOnlySpan<float> vertices =
 [
     -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
     -0.5f, +0.5f, 0.0f, 1.0f, 0.0f,
@@ -135,7 +135,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 });
 
 pixelShader.Dispose();
-vertexShader.Dispose();
+vertexShader.Dispose();*/
 
 float value = 0;
 
@@ -154,16 +154,16 @@ while (alive)
 
     Texture texture = swapchain.GetNextTexture();
 
-    nint map = device.MapBuffer(constantBuffer);
+    /*nint map = device.MapBuffer(constantBuffer);
     Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
     unsafe { Unsafe.CopyBlock((void*) map, Unsafe.AsPointer(ref matrix), 64); }
     device.UnmapBuffer(constantBuffer);
     value += 0.01f;
     if (value >= float.Pi * 2)
-        value -= float.Pi * 2;
+        value -= float.Pi * 2;*/
     
-    cl.Begin();
-    cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
+    //cl.Begin();
+    /*cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
     cl.SetDescriptorSet(0, pipeline, transformSet);
@@ -171,20 +171,20 @@ while (alive)
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
     
-    cl.EndRenderPass();
-    cl.End();
+    cl.EndRenderPass();*/
+    //cl.End();
     
-    device.ExecuteCommandList(cl);
+    //device.ExecuteCommandList(cl);
     swapchain.Present();
 }
 
-pipeline.Dispose();
+/*pipeline.Dispose();
 transformSet.Dispose();
 transformLayout.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
-vertexBuffer.Dispose();
-swapchain.Dispose();*/
+vertexBuffer.Dispose();*/
+swapchain.Dispose();
 cl.Dispose();
 device.Dispose();
 surface.Dispose();
