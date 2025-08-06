@@ -44,7 +44,7 @@ internal sealed unsafe class D3D11Device : Device
     
     public override CommandList CreateCommandList()
     {
-        throw new NotImplementedException();
+        return new D3D11CommandList(_device);
     }
     
     public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)

@@ -58,8 +58,8 @@ else
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
-/*CommandList cl = device.CreateCommandList();
-Swapchain swapchain =
+CommandList cl = device.CreateCommandList();
+/*Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
@@ -184,8 +184,8 @@ transformLayout.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();
-swapchain.Dispose();
-cl.Dispose();*/
+swapchain.Dispose();*/
+cl.Dispose();
 device.Dispose();
 surface.Dispose();
 instance.Dispose();
