@@ -44,7 +44,7 @@ internal sealed unsafe class D3D11Instance : Instance
     
     public override Surface CreateSurface(in SurfaceInfo info)
     {
-        throw new NotImplementedException();
+        return new D3D11Surface(in info);
     }
     
     public override Device CreateDevice(Surface surface, Adapter? adapter = null)
