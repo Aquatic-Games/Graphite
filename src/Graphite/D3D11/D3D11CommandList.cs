@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
+using ColorF = Graphite.Core.ColorF;
 
 namespace Graphite.D3D11;
 
@@ -40,12 +42,26 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
-        throw new NotImplementedException();
+        ID3D11RenderTargetView** targets = stackalloc ID3D11RenderTargetView*[colorAttachments.Length];
+
+        for (int i = 0; i < colorAttachments.Length; i++)
+        {
+            ref readonly ColorAttachmentInfo attachment = ref colorAttachments[i];
+            D3D11Texture texture = (D3D11Texture) attachment.Texture;
+            ColorF clearColor = attachment.ClearColor;
+            
+            targets[i] = texture.RenderTarget;
+
+            if (attachment.LoadOp == LoadOp.Clear)
+                _context->ClearRenderTargetView(texture.RenderTarget, (float*) &clearColor);
+        }
+
+        _context->OMSetRenderTargets((uint) colorAttachments.Length, targets, null);
     }
-    
+
     public override void EndRenderPass()
     {
-        throw new NotImplementedException();
+        // Do nothing
     }
     
     public override void SetGraphicsPipeline(Pipeline pipeline)

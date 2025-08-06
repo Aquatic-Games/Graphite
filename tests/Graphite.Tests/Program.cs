@@ -162,19 +162,19 @@ while (alive)
     if (value >= float.Pi * 2)
         value -= float.Pi * 2;*/
     
-    //cl.Begin();
-    /*cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
+    cl.Begin();
+    cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
     
-    cl.SetGraphicsPipeline(pipeline);
+    /*cl.SetGraphicsPipeline(pipeline);
     cl.SetDescriptorSet(0, pipeline, transformSet);
     cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
-    cl.DrawIndexed(6);
+    cl.DrawIndexed(6);*/
     
-    cl.EndRenderPass();*/
-    //cl.End();
+    cl.EndRenderPass();
+    cl.End();
     
-    //device.ExecuteCommandList(cl);
+    device.ExecuteCommandList(cl);
     swapchain.Present();
 }
 

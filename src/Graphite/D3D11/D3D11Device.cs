@@ -74,7 +74,8 @@ internal sealed unsafe class D3D11Device : Device
     
     public override void ExecuteCommandList(CommandList cl)
     {
-        throw new NotImplementedException();
+        D3D11CommandList d3dCommandList = (D3D11CommandList) cl;
+        _context->ExecuteCommandList(d3dCommandList.CommandList, false);
     }
     
     public override IntPtr MapBuffer(Buffer buffer)
