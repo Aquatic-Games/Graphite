@@ -10,12 +10,15 @@ namespace Graphite.D3D11;
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 internal sealed unsafe class D3D11Instance : Instance
 {
+    private readonly bool _debug;
     private readonly IDXGIFactory1* _factory;
 
     public override Backend Backend => Backend.D3D11;
     
     public D3D11Instance(ref readonly InstanceInfo info)
     {
+        _debug = info.Debug;
+        
         GraphiteLog.Log("Creating DXGI factory.");
         fixed (IDXGIFactory1** factory = &_factory)
             CreateDXGIFactory1(__uuidof<IDXGIFactory1>(), (void**) factory).Check("Create DXGI factory");
@@ -23,7 +26,20 @@ internal sealed unsafe class D3D11Instance : Instance
 
     public override Adapter[] EnumerateAdapters()
     {
-        throw new NotImplementedException();
+        List<Adapter> adapters = [];
+        
+        IDXGIAdapter1* adapter;
+        for (uint i = 0; _factory->EnumAdapters1(i, &adapter).SUCCEEDED; i++)
+        {
+            DXGI_ADAPTER_DESC1 desc;
+            adapter->GetDesc1(&desc).Check("Get adapter description");
+
+            string name = new string(&desc.Description.e0);
+            
+            adapters.Add(new Adapter((nint) adapter, i, name));
+        }
+
+        return adapters.ToArray();
     }
     
     public override Surface CreateSurface(in SurfaceInfo info)
