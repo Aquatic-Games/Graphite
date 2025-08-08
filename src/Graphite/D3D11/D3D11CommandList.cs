@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
+using static TerraFX.Interop.DirectX.D3D_PRIMITIVE_TOPOLOGY;
 using ColorF = Graphite.Core.ColorF;
 
 namespace Graphite.D3D11;
@@ -57,6 +58,19 @@ internal sealed unsafe class D3D11CommandList : CommandList
         }
 
         _context->OMSetRenderTargets((uint) colorAttachments.Length, targets, null);
+
+        Size2D size = ((D3D11Texture) colorAttachments[0].Texture).Size;
+
+        D3D11_VIEWPORT viewport = new()
+        {
+            TopLeftX = 0,
+            TopLeftY = 0,
+            Width = size.Width,
+            Height = size.Height,
+            MinDepth = 0,
+            MaxDepth = 1
+        };
+        _context->RSSetViewports(1, &viewport);
     }
 
     public override void EndRenderPass()
@@ -66,7 +80,13 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void SetGraphicsPipeline(Pipeline pipeline)
     {
-        throw new NotImplementedException();
+        D3D11Pipeline d3dPipeline = (D3D11Pipeline) pipeline;
+
+        _context->VSSetShader(d3dPipeline.VertexShader, null, 0);
+        _context->PSSetShader(d3dPipeline.PixelShader, null, 0);
+
+        // TODO: Primitive topology
+        _context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
     
     public override void SetDescriptorSet(uint slot, Pipeline pipeline, DescriptorSet set)
@@ -86,7 +106,7 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void Draw(uint numVertices, uint firstVertex = 0)
     {
-        throw new NotImplementedException();
+        _context->Draw(numVertices, firstVertex);
     }
     
     public override void DrawIndexed(uint numIndices, uint firstIndex = 0, int baseVertex = 0)

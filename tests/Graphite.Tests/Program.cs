@@ -121,20 +121,20 @@ ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
 /*DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
-DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
+DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));*/
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
     VertexShader = vertexShader,
     PixelShader = pixelShader,
     ColorTargets = [new ColorTargetInfo(Format.B8G8R8A8_UNorm)],
-    InputLayout =
+    /*InputLayout =
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
-    ],
-    Descriptors = [transformLayout]
-});*/
+    ],*/
+    //Descriptors = [transformLayout]
+});
 
 pixelShader.Dispose();
 vertexShader.Dispose();
@@ -167,11 +167,12 @@ while (alive)
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
     
-    /*cl.SetGraphicsPipeline(pipeline);
-    cl.SetDescriptorSet(0, pipeline, transformSet);
-    cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
-    cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
-    cl.DrawIndexed(6);*/
+    cl.SetGraphicsPipeline(pipeline);
+    //cl.SetDescriptorSet(0, pipeline, transformSet);
+    //cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
+    //cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
+    //cl.DrawIndexed(6);
+    cl.Draw(6);
     
     cl.EndRenderPass();
     cl.End();

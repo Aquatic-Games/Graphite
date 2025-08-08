@@ -54,7 +54,7 @@ internal sealed unsafe class D3D11Device : Device
     
     public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)
     {
-        throw new NotImplementedException();
+        return new D3D11Pipeline(_device, in info);
     }
     
     public override unsafe Buffer CreateBuffer(in BufferInfo info, void* data)
