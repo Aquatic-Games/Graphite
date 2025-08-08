@@ -20,7 +20,7 @@ if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
 const int width = 1280;
 const int height = 720;
 
-IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, SDL.WindowFlags.Resizable);
+IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
 
@@ -38,7 +38,9 @@ if (OperatingSystem.IsWindows())
 }
 else if (OperatingSystem.IsLinux())
 {
-    if (SDL.GetCurrentVideoDriver() == "wayland")
+    if (instance.Backend == Backend.D3D11)
+        surfaceInfo = new SurfaceInfo(SurfaceType.Win32, 0, window);
+    else if (SDL.GetCurrentVideoDriver() == "wayland")
     {
         nint display = SDL.GetPointerProperty(properties, SDL.Props.WindowWaylandDisplayPointer, 0);
         nint wsurface = SDL.GetPointerProperty(properties, SDL.Props.WindowWaylandSurfacePointer, 0);
@@ -109,15 +111,15 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();
+transferBuffer.Dispose();*/
 
-byte[] vShader = File.ReadAllBytes("Shader_v.spv");
-byte[] pShader = File.ReadAllBytes("Shader_p.spv");
+byte[] vShader = File.ReadAllBytes("SimpleShader_v.fxc");
+byte[] pShader = File.ReadAllBytes("SimpleShader_p.fxc");
 
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
-DescriptorLayout transformLayout =
+/*DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
 DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
 
@@ -132,10 +134,10 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
         new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
     ],
     Descriptors = [transformLayout]
-});
+});*/
 
 pixelShader.Dispose();
-vertexShader.Dispose();*/
+vertexShader.Dispose();
 
 float value = 0;
 

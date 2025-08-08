@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
@@ -17,6 +19,9 @@ internal sealed unsafe class D3D11Instance : Instance
     
     public D3D11Instance(ref readonly InstanceInfo info)
     {
+        if (IsDXVK)
+            ResolveLibrary += OnResolveLibrary;
+        
         _debug = info.Debug;
         
         GraphiteLog.Log("Creating DXGI factory.");
@@ -31,10 +36,21 @@ internal sealed unsafe class D3D11Instance : Instance
         IDXGIAdapter1* adapter;
         for (uint i = 0; _factory->EnumAdapters1(i, &adapter).SUCCEEDED; i++)
         {
-            DXGI_ADAPTER_DESC1 desc;
-            adapter->GetDesc1(&desc).Check("Get adapter description");
+            string name;
+            
+            // Work around a DXVK issue where GetDesc causes strange issues.
+            // Might just be an issue with my machine, needs testing.
+            if (IsDXVK)
+            {
+                name = $"Adapter {i + 1}";
+            }
+            else
+            {
+                DXGI_ADAPTER_DESC1 desc;
+                adapter->GetDesc1(&desc).Check("Get adapter description");
 
-            string name = new string(&desc.Description.e0);
+                name = new string(&desc.Description.e0);
+            }
             
             adapters.Add(new Adapter((nint) adapter, i, name));
         }
@@ -66,5 +82,24 @@ internal sealed unsafe class D3D11Instance : Instance
     {
         GraphiteLog.Log("Releasing factory.");
         _factory->Release();
+    }
+    
+    private IntPtr OnResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        libraryName = libraryName switch
+        {
+            "d3d11" => "libdxvk_d3d11",
+            "dxgi" => "libdxvk_dxgi"
+        };
+
+        return NativeLibrary.Load(libraryName, assembly, searchPath);
+    }
+    
+    internal static readonly bool IsDXVK;
+    
+    static D3D11Instance()
+    {
+        if (!OperatingSystem.IsWindows())
+            IsDXVK = true;
     }
 }

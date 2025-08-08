@@ -49,7 +49,7 @@ internal sealed unsafe class D3D11Device : Device
     
     public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
     {
-        throw new NotImplementedException();
+        return new D3D11ShaderModule(code);
     }
     
     public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)

@@ -18,8 +18,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Shader_v.spv" CopyToOutputDirectory="PreserveNewest" />
-      <None Include="Shader_p.spv" CopyToOutputDirectory="PreserveNewest" />
+      <None Include="*_v.*" CopyToOutputDirectory="PreserveNewest" />
+      <None Include="*_p.*" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ClCompile Include="SimpleShader.hlsl" />
     </ItemGroup>
 
 </Project>
