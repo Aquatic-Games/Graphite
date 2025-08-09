@@ -59,7 +59,7 @@ internal sealed unsafe class D3D11Device : Device
     
     public override unsafe Buffer CreateBuffer(in BufferInfo info, void* data)
     {
-        throw new NotImplementedException();
+        return new D3D11Buffer(_device, in info, data);
     }
     
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)

@@ -65,7 +65,7 @@ Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
-/*ReadOnlySpan<float> vertices =
+ReadOnlySpan<float> vertices =
 [
     -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
     -0.5f, +0.5f, 0.0f, 1.0f, 0.0f,
@@ -113,8 +113,8 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();*/
 
-byte[] vShader = File.ReadAllBytes("SimpleShader_v.fxc");
-byte[] pShader = File.ReadAllBytes("SimpleShader_p.fxc");
+byte[] vShader = File.ReadAllBytes("Shader_v.fxc");
+byte[] pShader = File.ReadAllBytes("Shader_p.fxc");
 
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
@@ -181,12 +181,12 @@ while (alive)
     swapchain.Present();
 }
 
-/*pipeline.Dispose();
-transformSet.Dispose();
-transformLayout.Dispose();
+pipeline.Dispose();
+/*transformSet.Dispose();
+transformLayout.Dispose();*/
 constantBuffer.Dispose();
 indexBuffer.Dispose();
-vertexBuffer.Dispose();*/
+vertexBuffer.Dispose();
 swapchain.Dispose();
 cl.Dispose();
 device.Dispose();
