@@ -38,7 +38,19 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void CopyBufferToBuffer(Buffer src, uint srcOffset, Buffer dest, uint destOffset, uint copySize = 0)
     {
-        throw new NotImplementedException();
+        D3D11Buffer d3dSrc = (D3D11Buffer) src;
+        D3D11Buffer d3dDest = (D3D11Buffer) dest;
+
+        D3D11_BOX copyBox = new()
+        {
+            left = srcOffset,
+            right = copySize == 0 ? d3dSrc.Info.SizeInBytes : (srcOffset + copySize),
+            bottom = 1,
+            back = 1
+        };
+
+        _context->CopySubresourceRegion((ID3D11Resource*) d3dDest.Buffer, 0, destOffset, 0, 0,
+            (ID3D11Resource*) d3dSrc.Buffer, 0, &copyBox);
     }
     
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)

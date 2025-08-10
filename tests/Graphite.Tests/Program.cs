@@ -79,11 +79,11 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
+/*Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
-Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));*/
 
-/*uint vertexSize = (uint) vertices.Length * sizeof(float);
+uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
 uint cBufferSize = 64;
 
@@ -111,7 +111,7 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();*/
+transferBuffer.Dispose();
 
 byte[] vShader = File.ReadAllBytes("Shader_v.fxc");
 byte[] pShader = File.ReadAllBytes("Shader_p.fxc");
@@ -159,13 +159,13 @@ while (alive)
 
     Texture texture = swapchain.GetNextTexture();
 
-    /*nint map = device.MapBuffer(constantBuffer);
+    nint map = device.MapBuffer(constantBuffer);
     Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
     unsafe { Unsafe.CopyBlock((void*) map, Unsafe.AsPointer(ref matrix), 64); }
     device.UnmapBuffer(constantBuffer);
     value += 0.01f;
     if (value >= float.Pi * 2)
-        value -= float.Pi * 2;*/
+        value -= float.Pi * 2;
     
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);

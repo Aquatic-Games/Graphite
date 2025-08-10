@@ -5,6 +5,7 @@ using TerraFX.Interop.Windows;
 using static TerraFX.Interop.DirectX.D3D_DRIVER_TYPE;
 using static TerraFX.Interop.DirectX.D3D_FEATURE_LEVEL;
 using static TerraFX.Interop.DirectX.D3D11_CREATE_DEVICE_FLAG;
+using static TerraFX.Interop.DirectX.D3D11_MAP;
 using static TerraFX.Interop.DirectX.D3D11;
 using static TerraFX.Interop.DirectX.DirectX;
 
@@ -78,14 +79,21 @@ internal sealed unsafe class D3D11Device : Device
         _context->ExecuteCommandList(d3dCommandList.CommandList, false);
     }
     
-    public override IntPtr MapBuffer(Buffer buffer)
+    public override nint MapBuffer(Buffer buffer)
     {
-        throw new NotImplementedException();
+        D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;
+        
+        D3D11_MAPPED_SUBRESOURCE mapped;
+        // TODO: Store the MapWrite/MapRead flags in the buffer so they can be used appropriately here.
+        _context->Map((ID3D11Resource*) d3dBuffer.Buffer, 0, D3D11_MAP_WRITE, 0, &mapped).Check("Map buffer");
+
+        return (nint) mapped.pData;
     }
     
     public override void UnmapBuffer(Buffer buffer)
     {
-        throw new NotImplementedException();
+        D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;
+        _context->Unmap((ID3D11Resource*) d3dBuffer.Buffer, 0);
     }
     
     public override void Dispose()
