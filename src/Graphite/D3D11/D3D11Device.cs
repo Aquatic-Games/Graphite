@@ -85,7 +85,7 @@ internal sealed unsafe class D3D11Device : Device
         
         D3D11_MAPPED_SUBRESOURCE mapped;
         // TODO: Store the MapWrite/MapRead flags in the buffer so they can be used appropriately here.
-        _context->Map((ID3D11Resource*) d3dBuffer.Buffer, 0, D3D11_MAP_WRITE, 0, &mapped).Check("Map buffer");
+        _context->Map((ID3D11Resource*) d3dBuffer.Buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped).Check("Map buffer");
 
         return (nint) mapped.pData;
     }

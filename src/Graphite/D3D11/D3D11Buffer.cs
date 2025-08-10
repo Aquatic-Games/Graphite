@@ -3,6 +3,7 @@ using Graphite.Core;
 using TerraFX.Interop.DirectX;
 using static TerraFX.Interop.DirectX.D3D11_BIND_FLAG;
 using static TerraFX.Interop.DirectX.D3D11_CPU_ACCESS_FLAG;
+using static TerraFX.Interop.DirectX.D3D11_USAGE;
 
 namespace Graphite.D3D11;
 
@@ -14,7 +15,7 @@ internal sealed unsafe class D3D11Buffer : Buffer
     public D3D11Buffer(ID3D11Device1* device, ref readonly BufferInfo info, void* data) : base(info)
     {
         D3D11_BIND_FLAG flags = 0;
-        D3D11_USAGE usage = D3D11_USAGE.D3D11_USAGE_DEFAULT;
+        D3D11_USAGE usage = D3D11_USAGE_DEFAULT;
         D3D11_CPU_ACCESS_FLAG cpuFlags = 0;
 
         if ((info.Usage & BufferUsage.VertexBuffer) != 0)
@@ -27,12 +28,13 @@ internal sealed unsafe class D3D11Buffer : Buffer
             throw new NotImplementedException();
         if ((info.Usage & BufferUsage.TransferBuffer) != 0)
         {
-            usage = D3D11_USAGE.D3D11_USAGE_STAGING;
+            usage = D3D11_USAGE_STAGING;
             cpuFlags |= D3D11_CPU_ACCESS_WRITE;
         }
 
         if ((info.Usage & BufferUsage.MapWrite) != 0)
         {
+            usage = D3D11_USAGE_DYNAMIC;
             cpuFlags |= D3D11_CPU_ACCESS_WRITE;
         }
 
@@ -41,7 +43,7 @@ internal sealed unsafe class D3D11Buffer : Buffer
             BindFlags = (uint) flags,
             Usage = usage,
             ByteWidth = info.SizeInBytes,
-            CPUAccessFlags = (uint) cpuFlags
+            CPUAccessFlags = (uint) cpuFlags,
         };
 
         D3D11_SUBRESOURCE_DATA resourceData = new()
