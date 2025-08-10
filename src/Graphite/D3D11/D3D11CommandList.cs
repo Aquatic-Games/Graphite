@@ -129,8 +129,11 @@ internal sealed unsafe class D3D11CommandList : CommandList
                     {
                         Debug.Assert(descriptor.Buffer != null);
                         D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                        uint offset = descriptor.BufferOffset;
+                        uint range = descriptor.BufferRange == uint.MaxValue
+                            ? buffer.Info.SizeInBytes : descriptor.BufferRange;
                         ID3D11Buffer* buf = buffer.Buffer;
-                        _context->VSSetConstantBuffers(remappedSlot, 1, &buf);
+                        _context->VSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
                         
                         break;
                     }
@@ -150,8 +153,11 @@ internal sealed unsafe class D3D11CommandList : CommandList
                     {
                         Debug.Assert(descriptor.Buffer != null);
                         D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                        uint offset = descriptor.BufferOffset;
+                        uint range = descriptor.BufferRange == uint.MaxValue
+                            ? buffer.Info.SizeInBytes : descriptor.BufferRange;
                         ID3D11Buffer* buf = buffer.Buffer;
-                        _context->PSSetConstantBuffers(remappedSlot, 1, &buf);
+                        _context->PSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
                         
                         break;
                     }
