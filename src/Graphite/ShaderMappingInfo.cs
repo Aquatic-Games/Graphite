@@ -3,13 +3,13 @@ namespace Graphite;
 /// <summary>
 /// Defines how the shader may be mapped to other backends.
 /// </summary>
-public ref struct ShaderMappingInfo
+public struct ShaderMappingInfo
 {
-    public ReadOnlySpan<VertexInputMapping> VertexInput;
+    public VertexInputMapping[]? VertexInput;
     
-    public ReadOnlySpan<DescriptorMapping> Descriptors;
+    public DescriptorMapping[]? Descriptors;
 
-    public ShaderMappingInfo(ReadOnlySpan<VertexInputMapping> vertexInput, ReadOnlySpan<DescriptorMapping> descriptors)
+    public ShaderMappingInfo(VertexInputMapping[]? vertexInput = null, DescriptorMapping[]? descriptors = null)
     {
         VertexInput = vertexInput;
         Descriptors = descriptors;

@@ -1,4 +1,7 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using System.Text;
 using TerraFX.Interop.DirectX;
 
 namespace Graphite.D3D11;
@@ -8,6 +11,8 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
 {
     public readonly ID3D11VertexShader* VertexShader;
     public readonly ID3D11PixelShader* PixelShader;
+
+    public readonly ID3D11InputLayout* InputLayout;
     
     public D3D11Pipeline(ID3D11Device1* device, ref readonly GraphicsPipelineInfo info)
     {
@@ -27,10 +32,63 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
             device->CreatePixelShader(pixelShader.Data, pixelShader.DataLength, null, pBixelShader)
                 .Check("Create pixel shader");
         }
+
+        if (info.InputLayout.Length > 0)
+        {
+            int numInputElements = info.InputLayout.Length;
+            
+            // For D3D support, there must be a shader mapping, and it must have the same number of elements as the
+            // input layout.
+            Debug.Assert(vertexShader.Mapping.VertexInput != null);
+            Debug.Assert(vertexShader.Mapping.VertexInput.Length == numInputElements);
+            
+            GCHandle* handles = stackalloc GCHandle[numInputElements];
+            D3D11_INPUT_ELEMENT_DESC* elements = stackalloc D3D11_INPUT_ELEMENT_DESC[numInputElements];
+            
+            for (int i = 0; i < numInputElements; i++)
+            {
+                ref readonly InputElementDescription element = ref info.InputLayout[i];
+                ref readonly VertexInputMapping input = ref vertexShader.Mapping.VertexInput[i];
+
+                string semantic = input.Semantic switch
+                {
+                    Semantic.Position => "POSITION",
+                    Semantic.TexCoord => "TEXCOORD",
+                    Semantic.Color => "COLOR",
+                    Semantic.Normal => "NORMAL",
+                    Semantic.Tangent => "TANGENT",
+                    Semantic.Bitangent => "BITANGENT",
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                
+                handles[i] = GCHandle.Alloc(Encoding.UTF8.GetBytes(semantic), GCHandleType.Pinned);
+
+                elements[i] = new D3D11_INPUT_ELEMENT_DESC
+                {
+                    SemanticName = (sbyte*) handles[i].AddrOfPinnedObject(),
+                    SemanticIndex = input.Index,
+                    Format = element.Format.ToD3D(),
+                    AlignedByteOffset = element.Offset,
+                    InputSlot = element.Slot
+                };
+            }
+            
+            fixed (ID3D11InputLayout** layout = &InputLayout)
+            {
+                device->CreateInputLayout(elements, (uint) numInputElements, vertexShader.Data, vertexShader.DataLength,
+                    layout).Check("Create input layout");
+            }
+            
+            for (int i = 0; i < numInputElements; i++)
+                handles[i].Free();
+        }
     }
     
     public override void Dispose()
     {
+        if (InputLayout != null)
+            InputLayout->Release();
+        
         PixelShader->Release();
         VertexShader->Release();
     }

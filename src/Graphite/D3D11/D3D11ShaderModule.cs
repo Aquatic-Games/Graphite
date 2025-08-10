@@ -8,8 +8,12 @@ internal sealed unsafe class D3D11ShaderModule : ShaderModule
     public readonly void* Data;
     public readonly nuint DataLength;
 
-    public D3D11ShaderModule(byte[] dxbc)
+    public readonly ShaderMappingInfo Mapping;
+
+    public D3D11ShaderModule(byte[] dxbc, ref readonly ShaderMappingInfo mapping)
     {
+        Mapping = mapping;
+        
         DataLength = (nuint) dxbc.Length;
         Data = NativeMemory.Alloc(DataLength);
         fixed (byte* pData = dxbc)

@@ -12,7 +12,7 @@ internal static class D3DUtils
     public static void Check(this HRESULT result, string operation)
     {
         if (result.FAILED)
-            throw new OperationFailedException($"D3D11 operation '{operation}' failed with HRESULT: {result.Value}");
+            throw new OperationFailedException($"D3D11 operation '{operation}' failed with HRESULT: 0x {result.Value:x8}");
     }
 
     public static DXGI_FORMAT ToD3D(this Format format)

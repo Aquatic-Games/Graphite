@@ -2,13 +2,13 @@ namespace Graphite;
 
 public struct VertexInputMapping
 {
+    public Semantic Semantic;
+    
     public uint Index;
 
-    public uint Semantic;
-
-    public VertexInputMapping(uint index, uint semantic)
+    public VertexInputMapping(Semantic semantic, uint index)
     {
-        Index = index;
         Semantic = semantic;
+        Index = index;
     }
 }

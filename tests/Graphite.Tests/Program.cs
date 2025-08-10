@@ -116,7 +116,10 @@ transferBuffer.Dispose();*/
 byte[] vShader = File.ReadAllBytes("Shader_v.fxc");
 byte[] pShader = File.ReadAllBytes("Shader_p.fxc");
 
-ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain");
+ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain",
+    new ShaderMappingInfo([
+        new VertexInputMapping(Semantic.Position, 0), new VertexInputMapping(Semantic.Color, 0)
+    ]));
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
 /*DescriptorLayout transformLayout =
@@ -128,11 +131,11 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
     VertexShader = vertexShader,
     PixelShader = pixelShader,
     ColorTargets = [new ColorTargetInfo(Format.B8G8R8A8_UNorm)],
-    /*InputLayout =
+    InputLayout =
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
-    ],*/
+    ],
     //Descriptors = [transformLayout]
 });
 
@@ -169,10 +172,10 @@ while (alive)
     
     cl.SetGraphicsPipeline(pipeline);
     //cl.SetDescriptorSet(0, pipeline, transformSet);
-    //cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
-    //cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
-    //cl.DrawIndexed(6);
-    cl.Draw(6);
+    cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
+    cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
+    cl.DrawIndexed(6);
+    //cl.Draw(6);
     
     cl.EndRenderPass();
     cl.End();
