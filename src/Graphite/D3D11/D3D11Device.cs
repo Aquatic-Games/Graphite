@@ -65,12 +65,12 @@ internal sealed unsafe class D3D11Device : Device
     
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
     {
-        throw new NotImplementedException();
+        return new D3D11DescriptorLayout(bindings);
     }
     
     public override DescriptorSet CreateDescriptorSet(DescriptorLayout layout, params ReadOnlySpan<Descriptor> descriptors)
     {
-        throw new NotImplementedException();
+        return new D3D11DescriptorSet(layout, descriptors);
     }
     
     public override void ExecuteCommandList(CommandList cl)

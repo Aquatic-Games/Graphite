@@ -13,11 +13,17 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
     public readonly ID3D11PixelShader* PixelShader;
 
     public readonly ID3D11InputLayout* InputLayout;
+
+    public readonly Dictionary<uint, Dictionary<uint, uint>>? VertexDescriptors;
+    public readonly Dictionary<uint, Dictionary<uint, uint>>? PixelDescriptors;
     
     public D3D11Pipeline(ID3D11Device1* device, ref readonly GraphicsPipelineInfo info)
     {
         D3D11ShaderModule vertexShader = (D3D11ShaderModule) info.VertexShader;
+        VertexDescriptors = GetDescriptorRemappings(vertexShader.Mapping);
+        
         D3D11ShaderModule pixelShader = (D3D11ShaderModule) info.PixelShader;
+        PixelDescriptors = GetDescriptorRemappings(pixelShader.Mapping);
         
         // pressed the wrong key and I laughed so I am not changing it
         fixed (ID3D11VertexShader** pBertexShader = &VertexShader)
@@ -39,8 +45,10 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
             
             // For D3D support, there must be a shader mapping, and it must have the same number of elements as the
             // input layout.
-            Debug.Assert(vertexShader.Mapping.VertexInput != null);
-            Debug.Assert(vertexShader.Mapping.VertexInput.Length == numInputElements);
+            Debug.Assert(vertexShader.Mapping.VertexInput != null,
+                "The shader mapping for the vertex shader cannot be null.");
+            Debug.Assert(vertexShader.Mapping.VertexInput.Length == numInputElements,
+                "The shader mapping for the vertex shader must have the same number of Vertex Input mappings as the Input Layout in the pipeline.");
             
             GCHandle* handles = stackalloc GCHandle[numInputElements];
             D3D11_INPUT_ELEMENT_DESC* elements = stackalloc D3D11_INPUT_ELEMENT_DESC[numInputElements];
@@ -91,5 +99,25 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
         
         PixelShader->Release();
         VertexShader->Release();
+    }
+
+    private static Dictionary<uint, Dictionary<uint, uint>>? GetDescriptorRemappings(ShaderMappingInfo shaderMapping)
+    {
+        if (shaderMapping.Descriptors is not { } descriptors)
+            return null;
+
+        Dictionary<uint, Dictionary<uint, uint>> remapping = [];
+        foreach (DescriptorMapping mapping in descriptors)
+        {
+            if (!remapping.TryGetValue(mapping.Set, out Dictionary<uint, uint> remappedSet))
+            {
+                remappedSet = [];
+                remapping.Add(mapping.Set, remappedSet);
+            }
+            
+            remappedSet.Add(mapping.Binding, mapping.Slot);
+        }
+
+        return remapping;
     }
 }

@@ -17,15 +17,16 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
+Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true));
+Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
+
 const int width = 1280;
 const int height = 720;
 
-IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+// Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
+IntPtr window = SDL.CreateWindow($"Graphite.Tests - {instance.Backend}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
-
-Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true));
-Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 uint properties = SDL.GetWindowProperties(window);
 SurfaceInfo surfaceInfo;
@@ -79,11 +80,11 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-/*Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
+Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
-Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));*/
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
 
-uint vertexSize = (uint) vertices.Length * sizeof(float);
+/*uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
 uint cBufferSize = 64;
 
@@ -111,20 +112,29 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();
+transferBuffer.Dispose();*/
 
 byte[] vShader = File.ReadAllBytes("Shader_v.fxc");
 byte[] pShader = File.ReadAllBytes("Shader_p.fxc");
 
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain",
-    new ShaderMappingInfo([
-        new VertexInputMapping(Semantic.Position, 0), new VertexInputMapping(Semantic.Color, 0)
-    ]));
+    new ShaderMappingInfo
+    {
+        VertexInput =
+        [
+            new VertexInputMapping(Semantic.Position, 0),
+            new VertexInputMapping(Semantic.Color, 0)
+        ],
+        Descriptors =
+        [
+            new DescriptorMapping(0, 0, 0)
+        ]
+    });
 ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
 
-/*DescriptorLayout transformLayout =
+DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
-DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));*/
+DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -136,7 +146,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
     ],
-    //Descriptors = [transformLayout]
+    Descriptors = [transformLayout]
 });
 
 pixelShader.Dispose();
@@ -171,7 +181,7 @@ while (alive)
     cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
-    //cl.SetDescriptorSet(0, pipeline, transformSet);
+    cl.SetDescriptorSet(0, pipeline, transformSet);
     cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
@@ -185,8 +195,8 @@ while (alive)
 }
 
 pipeline.Dispose();
-/*transformSet.Dispose();
-transformLayout.Dispose();*/
+transformSet.Dispose();
+transformLayout.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
@@ -106,7 +107,59 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void SetDescriptorSet(uint slot, Pipeline pipeline, DescriptorSet set)
     {
-        throw new NotImplementedException();
+        D3D11Pipeline d3dPipeline = (D3D11Pipeline) pipeline;
+        D3D11DescriptorSet d3dSet = (D3D11DescriptorSet) set;
+
+        // TODO: I wonder if a lot of this can be cached?
+        // TODO: Try and reduce code duplication somehow. I'd hate to have to duplicate this for 5 different shaders....
+        
+        foreach (Descriptor descriptor in d3dSet.Descriptors)
+        {
+            ShaderStage stages = d3dSet.Layout.Layout[descriptor.Binding].Stages;
+            DescriptorType type = d3dSet.Layout.Layout[descriptor.Binding].Type;
+
+            if ((stages & ShaderStage.Vertex) != 0)
+            {
+                Debug.Assert(d3dPipeline.VertexDescriptors != null);
+                uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
+
+                switch (type)
+                {
+                    case DescriptorType.ConstantBuffer:
+                    {
+                        Debug.Assert(descriptor.Buffer != null);
+                        D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                        ID3D11Buffer* buf = buffer.Buffer;
+                        _context->VSSetConstantBuffers(remappedSlot, 1, &buf);
+                        
+                        break;
+                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            if ((stages & ShaderStage.Pixel) != 0)
+            {
+                Debug.Assert(d3dPipeline.PixelDescriptors != null);
+                uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
+                
+                switch (type)
+                {
+                    case DescriptorType.ConstantBuffer:
+                    {
+                        Debug.Assert(descriptor.Buffer != null);
+                        D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                        ID3D11Buffer* buf = buffer.Buffer;
+                        _context->PSSetConstantBuffers(remappedSlot, 1, &buf);
+                        
+                        break;
+                    }
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
     }
     
     public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
