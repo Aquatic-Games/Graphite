@@ -11,7 +11,8 @@ internal sealed unsafe class D3D11Texture : Texture
 
     public readonly ID3D11RenderTargetView* RenderTarget;
     
-    public D3D11Texture(ID3D11Device1* device, ID3D11Texture2D* swapchainTexture, Size2D size) : base(size)
+    public D3D11Texture(ID3D11Device1* device, ID3D11Texture2D* swapchainTexture, Format format, Size2D size)
+        : base(TextureInfo.Texture2D(format, size, 1, TextureUsage.None))
     {
         Texture = (ID3D11DeviceChild*) swapchainTexture;
         

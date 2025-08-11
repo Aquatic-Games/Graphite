@@ -4,11 +4,11 @@ namespace Graphite;
 
 public abstract class Texture : IDisposable
 {
-    public readonly Size2D Size;
+    public readonly TextureInfo Info;
 
-    protected Texture(Size2D size)
+    protected Texture(TextureInfo info)
     {
-        Size = size;
+        Info = info;
     }
     
     public abstract void Dispose();

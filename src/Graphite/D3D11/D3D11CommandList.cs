@@ -72,7 +72,7 @@ internal sealed unsafe class D3D11CommandList : CommandList
 
         _context->OMSetRenderTargets((uint) colorAttachments.Length, targets, null);
 
-        Size2D size = ((D3D11Texture) colorAttachments[0].Texture).Size;
+        Size2D size = (Size2D) ((D3D11Texture) colorAttachments[0].Texture).Info.Size;
 
         D3D11_VIEWPORT viewport = new()
         {

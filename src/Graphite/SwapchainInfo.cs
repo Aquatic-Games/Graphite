@@ -2,7 +2,7 @@ using Graphite.Core;
 
 namespace Graphite;
 
-public struct SwapchainInfo
+public record struct SwapchainInfo
 {
     public Surface Surface;
 

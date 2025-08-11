@@ -173,7 +173,7 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
         GraphiteLog.Log("Creating swapchain textures.");
         _swapchainTextures = new VulkanTexture[numImages];
         for (uint i = 0; i < numImages; i++)
-            _swapchainTextures[i] = new VulkanTexture(_vk, images[i], _device.Device, extent, format);
+            _swapchainTextures[i] = new VulkanTexture(_vk, images[i], _device.Device, extent, _format);
     }
 
     private void RecreateSwapchain()

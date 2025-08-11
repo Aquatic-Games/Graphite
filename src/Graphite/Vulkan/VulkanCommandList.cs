@@ -1,5 +1,6 @@
 using Graphite.Core;
 using Silk.NET.Vulkan;
+using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
 
@@ -65,6 +66,30 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.CmdCopyBuffer(Buffer, vkSrc.Buffer, vkDest.Buffer, 1, &copy);
     }
 
+    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
+        Offset3D offset = default)
+    {
+        VulkanBuffer vkSrc = (VulkanBuffer) src;
+        VulkanTexture vkDest = (VulkanTexture) dest;
+
+        BufferImageCopy copy = new()
+        {
+            BufferOffset = srcOffset,
+            ImageExtent = new Extent3D(size.Width, size.Height, size.Depth),
+            ImageOffset = new Silk.NET.Vulkan.Offset3D(offset.X, offset.Y, offset.Z),
+            // TODO: Mip level, array layer
+            ImageSubresource = new ImageSubresourceLayers
+            {
+                AspectMask = ImageAspectFlags.ColorBit,
+                BaseArrayLayer = 0,
+                LayerCount = 1,
+                MipLevel = 0
+            }
+        };
+        
+        _vk.CmdCopyBufferToImage(Buffer, vkSrc.Buffer, vkDest.Image, );
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         RenderingAttachmentInfo* colorRenderingAttachments = stackalloc RenderingAttachmentInfo[colorAttachments.Length];
@@ -91,7 +116,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
             };
         }
 
-        Size2D attachmentSize = colorAttachments[0].Texture.Size;
+        Size3D attachmentSize = colorAttachments[0].Texture.Info.Size;
         
         RenderingInfo renderingInfo = new()
         {

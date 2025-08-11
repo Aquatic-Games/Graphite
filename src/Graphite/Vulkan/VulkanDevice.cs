@@ -206,6 +206,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanBuffer(_vk, this, _allocator, in info, data);
     }
 
+    public override Texture CreateTexture(in TextureInfo info)
+    {
+        return new VulkanTexture(_vk, Device, _allocator, in info);
+    }
+
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
     {
         return new VulkanDescriptorLayout(_vk, Device, bindings);

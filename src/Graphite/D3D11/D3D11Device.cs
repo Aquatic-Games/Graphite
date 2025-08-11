@@ -62,7 +62,12 @@ internal sealed unsafe class D3D11Device : Device
     {
         return new D3D11Buffer(_device, in info, data);
     }
-    
+
+    public override Texture CreateTexture(in TextureInfo info)
+    {
+        throw new NotImplementedException();
+    }
+
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
     {
         return new D3D11DescriptorLayout(bindings);

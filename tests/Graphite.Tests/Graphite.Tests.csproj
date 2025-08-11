@@ -15,11 +15,15 @@
     <ItemGroup>
       <PackageReference Include="SDL3-CS" Version="3.2.16.4" />
       <PackageReference Include="SDL3-CS.Native" Version="3.2.18.2" />
+      <PackageReference Include="StbImageSharp" Version="2.30.15" />
     </ItemGroup>
 
     <ItemGroup>
       <None Include="*_v.*" CopyToOutputDirectory="PreserveNewest" />
       <None Include="*_p.*" CopyToOutputDirectory="PreserveNewest" />
+      <None Update="DEBUG.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>

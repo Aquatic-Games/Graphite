@@ -17,7 +17,21 @@ public static unsafe partial class Vma
     {
         fixed (Buffer* pBuffer = &buffer)
         fixed (Allocation** pAllocation = &allocation)
+        {
             return CreateBuffer(allocator, pBufferCreateInfo, pAllocationCreateInfo, pBuffer, pAllocation,
                 pAllocationInfo);
+        }
+    }
+
+    public static Result CreateImage(Allocator* allocator, ImageCreateInfo* pImageCreateInfo,
+        AllocationCreateInfo* pAllocationCreateInfo, out Image image, out Allocation* allocation,
+        VmaAllocationInfo* pAllocationInfo)
+    {
+        fixed (Image* pImage = &image)
+        fixed (Allocation** pAllocation = &allocation)
+        {
+            return CreateImage(allocator, pImageCreateInfo, pAllocationCreateInfo, pImage, pAllocation,
+                pAllocationInfo);
+        }
     }
 }

@@ -1,5 +1,7 @@
 using Graphite.Core;
+using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Vulkan;
+using static Graphite.VulkanMemoryAllocator.VmaMemoryUsage;
 
 namespace Graphite.Vulkan;
 
@@ -7,16 +9,58 @@ internal sealed unsafe class VulkanTexture : Texture
 {
     private readonly Vk _vk;
     private readonly VkDevice _device;
+    private readonly Allocator* _allocator;
     
     public readonly Image Image;
     public readonly ImageView View;
+    public readonly Allocation* Allocation;
 
     public readonly bool IsSwapchainTexture;
 
     public ImageLayout CurrentLayout;
+
+    public VulkanTexture(Vk vk, VkDevice device, Allocator* allocator, ref readonly TextureInfo info) : base(info)
+    {
+        _vk = vk;
+        _device = device;
+        _allocator = allocator;
+        
+        ImageType type = info.Type switch
+        {
+            TextureType.Texture2D => ImageType.Type2D,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        ImageUsageFlags usage = 0;
+
+        if ((info.Usage & TextureUsage.ShaderResource) != 0)
+            usage |= ImageUsageFlags.SampledBit;
+
+        Extent3D extent = new Extent3D(info.Size.Width, info.Size.Height, info.Size.Depth);
+
+        ImageCreateInfo imageInfo = new()
+        {
+            SType = StructureType.ImageCreateInfo,
+            ImageType = type,
+            Format = info.Format.ToVk(),
+            Extent = extent,
+            MipLevels = info.MipLevels,
+            ArrayLayers = info.ArraySize,
+            Samples = SampleCountFlags.Count1Bit,
+            Usage = usage
+        };
+
+        AllocationCreateInfo allocInfo = new()
+        {
+            usage = VMA_MEMORY_USAGE_AUTO
+        };
+        
+        GraphiteLog.Log("Creating image.");
+        Vma.CreateImage(_allocator, &imageInfo, &allocInfo, out Image, out Allocation, null).Check("Create image");
+    }
     
-    public VulkanTexture(Vk vk, Image image, VkDevice device, Extent2D extent, VkFormat format)
-        : base(new Size2D(extent.Width, extent.Height))
+    public VulkanTexture(Vk vk, Image image, VkDevice device, Extent2D extent, Format format)
+        : base(TextureInfo.Texture2D(format, new Size2D(extent.Width, extent.Height), 1, TextureUsage.None))
     {
         _vk = vk;
         _device = device;
@@ -28,7 +72,7 @@ internal sealed unsafe class VulkanTexture : Texture
         {
             SType = StructureType.ImageViewCreateInfo,
             Image = Image,
-            Format = format,
+            Format = format.ToVk(),
             ViewType = ImageViewType.Type2D,
             Components = new ComponentMapping
             {
@@ -60,7 +104,7 @@ internal sealed unsafe class VulkanTexture : Texture
             return;
         
         GraphiteLog.Log("Destroying image.");
-        _vk.DestroyImage(_device, Image, null);
+        Vma.DestroyImage(_allocator, Image, Allocation);
     }
 
     public void Transition(CommandBuffer cb, ImageLayout @new)

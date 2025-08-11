@@ -1,3 +1,5 @@
+using Graphite.Core;
+
 namespace Graphite;
 
 public abstract class CommandList : IDisposable
@@ -22,6 +24,9 @@ public abstract class CommandList : IDisposable
     /// <param name="copySize">The size in bytes of the copy. If 0, the whole source buffer will be copied to the destination.</param>
     /// <remarks>This is a transfer operation, and cannot occur inside a render pass.</remarks>
     public abstract void CopyBufferToBuffer(Buffer src, uint srcOffset, Buffer dest, uint destOffset, uint copySize = 0);
+
+    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
+        Offset3D offset = default);
 
     /// <summary>
     /// Begin a render pass with the given color attachments.

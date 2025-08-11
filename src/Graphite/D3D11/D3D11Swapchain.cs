@@ -44,7 +44,7 @@ internal sealed unsafe class D3D11Swapchain : Swapchain
         ID3D11Texture2D* texture;
         _swapchain->GetBuffer(0, __uuidof<ID3D11Texture2D>(), (void**) &texture).Check("Get swapchain texture");
 
-        _swapchainTexture = new D3D11Texture(device, texture, _size);
+        _swapchainTexture = new D3D11Texture(device, texture, _format, _size);
     }
     
     public override Texture GetNextTexture()

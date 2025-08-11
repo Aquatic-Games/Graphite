@@ -114,6 +114,13 @@ public abstract class Device : IDisposable
         => CreateBuffer<T>(usage, data.AsSpan());
 
     /// <summary>
+    /// Create a <see cref="Texture"/> from the given info.
+    /// </summary>
+    /// <param name="info">The <see cref="TextureInfo"/> to use when creating the texture.</param>
+    /// <returns>The created <see cref="Texture"/>.</returns>
+    public abstract unsafe Texture CreateTexture(in TextureInfo info);
+
+    /// <summary>
     /// Create a <see cref="DescriptorLayout"/> with the given <see cref="DescriptorBinding"/>s.
     /// </summary>
     /// <param name="bindings">The <see cref="DescriptorBinding"/>s that this layout will contain.</param>

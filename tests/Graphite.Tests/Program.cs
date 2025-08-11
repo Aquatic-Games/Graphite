@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
 using SDL3;
+using StbImageSharp;
 using Buffer = Graphite.Buffer;
 
 GraphiteLog.LogMessage += (severity, type, message, _, _) =>
@@ -80,19 +81,24 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
-Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
-Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
+ImageResult result = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
 
-/*uint vertexSize = (uint) vertices.Length * sizeof(float);
+/*Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
+Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));*/
+
+uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
 uint cBufferSize = 64;
+uint textureSize = (uint) (result.Width * result.Height * 4); // 32bpp
 
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
 Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
+Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
+    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
 
-Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize));
+Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize + textureSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
 unsafe
 {
@@ -100,8 +106,12 @@ unsafe
         Unsafe.CopyBlock((byte*) mappedBuffer, pVertices, vertexSize);
     fixed (ushort* pIndices = indices)
         Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize, pIndices, indexSize);
+    
     Matrix4x4 identity = Matrix4x4.Identity;
     Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize, Unsafe.AsPointer(ref identity), cBufferSize);
+
+    fixed (byte* pData = result.Data)
+        Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize + cBufferSize, pData, textureSize);
 }
 device.UnmapBuffer(transferBuffer);
 
@@ -112,7 +122,7 @@ cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0)
 cl.End();
 device.ExecuteCommandList(cl);
 
-transferBuffer.Dispose();*/
+transferBuffer.Dispose();
 
 byte[] vShader = ReadShaderBytes(device, "Shader_v");
 byte[] pShader = ReadShaderBytes(device, "Shader_p");
@@ -167,7 +177,7 @@ while (alive)
         }
     }
 
-    Texture texture = swapchain.GetNextTexture();
+    Texture swapchainTexture = swapchain.GetNextTexture();
 
     nint map = device.MapBuffer(constantBuffer);
     Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
@@ -178,7 +188,7 @@ while (alive)
         value -= float.Pi * 2;
     
     cl.Begin();
-    cl.BeginRenderPass([new ColorAttachmentInfo(texture, new ColorF(Color.CornflowerBlue))]);
+    cl.BeginRenderPass([new ColorAttachmentInfo(swapchainTexture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
     cl.SetDescriptorSet(0, pipeline, transformSet);

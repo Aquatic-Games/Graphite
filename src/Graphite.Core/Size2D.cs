@@ -11,6 +11,12 @@ public struct Size2D : IEquatable<Size2D>
         Width = width;
         Height = height;
     }
+    
+    /// <summary>
+    /// Cast a <see cref="Size2D"/> to a <see cref="Size3D"/>. The <see cref="Size3D.Depth"/> field will be set to 1.
+    /// </summary>
+    public static explicit operator Size3D(Size2D size)
+        => new Size3D(size);
 
     public bool Equals(Size2D other)
     {
