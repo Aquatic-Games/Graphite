@@ -9,6 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\Graphite.ShaderTools\Graphite.ShaderTools.csproj" />
       <ProjectReference Include="..\..\src\Graphite\Graphite.csproj" />
     </ItemGroup>
 

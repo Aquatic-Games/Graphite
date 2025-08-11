@@ -48,8 +48,8 @@ public abstract class Instance : IDisposable
     /// <returns>The created <see cref="Instance"/>.</returns>
     public static Instance Create(in InstanceInfo info)
     {
-        //if (OperatingSystem.IsWindows() || (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") ?? "0") == "1")
-        //    return new D3D11Instance(in info);
+        if (OperatingSystem.IsWindows() || (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") ?? "0") == "1")
+            return new D3D11Instance(in info);
         
         return new VulkanInstance(in info);
     }

@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
+using Graphite.ShaderTools;
 using SDL3;
 using StbImageSharp;
 using Buffer = Graphite.Buffer;
@@ -95,8 +96,8 @@ uint textureSize = (uint) (result.Width * result.Height * 4); // 32bpp
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
 Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
-Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
-    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
+//Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
+//    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
 
 Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize + textureSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
@@ -119,29 +120,17 @@ cl.Begin();
 cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
-cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
+//cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
 cl.End();
 device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();
 
-byte[] vShader = ReadShaderBytes(device, "Shader_v");
-byte[] pShader = ReadShaderBytes(device, "Shader_p");
+byte[] vShader = File.ReadAllBytes("Shader_v.spv");
+byte[] pShader = File.ReadAllBytes("Shader_p.spv");
 
-ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain",
-    new ShaderMappingInfo
-    {
-        VertexInput =
-        [
-            new VertexInputMapping(Semantic.Position, 0),
-            new VertexInputMapping(Semantic.Color, 0)
-        ],
-        Descriptors =
-        [
-            new DescriptorMapping(0, 0, 0)
-        ]
-    });
-ShaderModule pixelShader = device.CreateShaderModule(pShader, "PSMain");
+ShaderModule vertexShader = device.CreateShaderModuleFromSpirv(ShaderStage.Vertex, vShader, "VSMain");
+ShaderModule pixelShader = device.CreateShaderModuleFromSpirv(ShaderStage.Pixel, pShader, "PSMain");
 
 DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
@@ -218,15 +207,3 @@ surface.Dispose();
 instance.Dispose();
 SDL.DestroyWindow(window);
 SDL.Quit();
-
-static byte[] ReadShaderBytes(Device device, string path)
-{
-    string extension = device.Backend switch
-    {
-        Backend.Vulkan => ".spv",
-        Backend.D3D11 => ".fxc",
-        _ => throw new ArgumentOutOfRangeException()
-    };
-
-    return File.ReadAllBytes(path + extension);
-}

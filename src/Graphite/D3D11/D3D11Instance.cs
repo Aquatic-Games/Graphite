@@ -84,15 +84,16 @@ internal sealed unsafe class D3D11Instance : Instance
         _factory->Release();
     }
     
-    private IntPtr OnResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    private static IntPtr OnResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
     {
-        libraryName = libraryName switch
+        string newLibName = libraryName switch
         {
             "d3d11" => "libdxvk_d3d11",
-            "dxgi" => "libdxvk_dxgi"
+            "dxgi" => "libdxvk_dxgi",
+            _ => libraryName
         };
 
-        return NativeLibrary.Load(libraryName, assembly, searchPath);
+        return NativeLibrary.Load(newLibName, assembly, searchPath);
     }
     
     internal static readonly bool IsDXVK;
