@@ -114,8 +114,8 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();*/
 
-byte[] vShader = File.ReadAllBytes("Shader_v.fxc");
-byte[] pShader = File.ReadAllBytes("Shader_p.fxc");
+byte[] vShader = ReadShaderBytes(device, "Shader_v");
+byte[] pShader = ReadShaderBytes(device, "Shader_p");
 
 ShaderModule vertexShader = device.CreateShaderModule(vShader, "VSMain",
     new ShaderMappingInfo
@@ -207,3 +207,15 @@ surface.Dispose();
 instance.Dispose();
 SDL.DestroyWindow(window);
 SDL.Quit();
+
+static byte[] ReadShaderBytes(Device device, string path)
+{
+    string extension = device.Backend switch
+    {
+        Backend.Vulkan => ".spv",
+        Backend.D3D11 => ".fxc",
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    return File.ReadAllBytes(path + extension);
+}
