@@ -99,10 +99,22 @@ public static unsafe class SpirvTools
             CheckResult(_spirv.CompilerCompile(compiler, &compiled), "Compile");
 
             GraphiteLog.Log(new string((sbyte*) compiled));
+
+            mapping = new ShaderMappingInfo();
+            Resources* resources;
+            CheckResult(_spirv.CompilerCreateShaderResources(compiler, &resources), "Create shader resources");
             
             if (backend == GrBackend.D3D11)
             {
-                mapping = default;
+                nuint numResources;
+                ReflectedResource* reflectedResources;
+                _spirv.ResourcesGetResourceListForType(resources, ResourceType.StageInput, &reflectedResources, &numResources);
+
+                VertexInputMapping[] vertexInput = new VertexInputMapping[numResources];
+                for (uint i = 0; i < numResources; i++)
+                    vertexInput[i] = new VertexInputMapping(Semantic.TexCoord, i);
+
+                mapping.VertexInput = vertexInput;
                 return CompileDXBC(compiled, "main", stage);
             }
         }
