@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Graphite.Core;
+using Silk.NET.SPIRV;
 using Silk.NET.SPIRV.Cross;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
@@ -20,7 +21,8 @@ public static unsafe class SpirvTools
         _spirv = Cross.GetApi();
     }
 
-    public static byte[] TranspileSpirv(GrBackend backend, byte[] spirv, ShaderStage stage, string entryPoint, out ShaderMappingInfo mapping)
+    public static byte[] TranspileSpirv(GrBackend backend, byte[] spirv, ShaderStage stage, string entryPoint,
+        out ShaderMappingInfo mapping)
     {
         if (backend == GrBackend.Other)
             throw new NotSupportedException("Custom backends must use pre-compiled shaders, or a custom transpiler!");
@@ -81,10 +83,17 @@ public static unsafe class SpirvTools
 
             CompilerOptions* options;
             CheckResult(_spirv.CompilerCreateCompilerOptions(compiler, &options), "Create compiler options");
-
             CheckResult(_spirv.CompilerOptionsSetUint(options, CompilerOption.HlslShaderModel, 50), "Set shader model");
-            
             CheckResult(_spirv.CompilerInstallCompilerOptions(compiler, options), "Install compiler options");
+
+            ExecutionModel model = stage switch
+            {
+                ShaderStage.Vertex => ExecutionModel.Vertex,
+                ShaderStage.Pixel => ExecutionModel.Fragment,
+                _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, null)
+            };
+            
+            _spirv.CompilerSetEntryPoint(compiler, entryPoint, model);
 
             byte* compiled;
             CheckResult(_spirv.CompilerCompile(compiler, &compiled), "Compile");
@@ -94,7 +103,7 @@ public static unsafe class SpirvTools
             if (backend == GrBackend.D3D11)
             {
                 mapping = default;
-                return CompileDXBC(compiled, entryPoint, stage);
+                return CompileDXBC(compiled, "main", stage);
             }
         }
         finally
