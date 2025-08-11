@@ -66,11 +66,14 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.CmdCopyBuffer(Buffer, vkSrc.Buffer, vkDest.Buffer, 1, &copy);
     }
 
-    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
+    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
         Offset3D offset = default)
     {
         VulkanBuffer vkSrc = (VulkanBuffer) src;
         VulkanTexture vkDest = (VulkanTexture) dest;
+
+        if (size == default)
+            size = vkDest.Info.Size;
 
         BufferImageCopy copy = new()
         {
@@ -86,8 +89,9 @@ internal sealed unsafe class VulkanCommandList : CommandList
                 MipLevel = 0
             }
         };
-        
-        _vk.CmdCopyBufferToImage(Buffer, vkSrc.Buffer, vkDest.Image, );
+
+        vkDest.Transition(Buffer, ImageLayout.TransferDstOptimal);
+        _vk.CmdCopyBufferToImage(Buffer, vkSrc.Buffer, vkDest.Image, vkDest.CurrentLayout, 1, &copy);
     }
 
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)

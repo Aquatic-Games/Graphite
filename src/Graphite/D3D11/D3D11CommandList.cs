@@ -53,7 +53,13 @@ internal sealed unsafe class D3D11CommandList : CommandList
         _context->CopySubresourceRegion((ID3D11Resource*) d3dDest.Buffer, 0, destOffset, 0, 0,
             (ID3D11Resource*) d3dSrc.Buffer, 0, &copyBox);
     }
-    
+
+    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
+        Offset3D offset = default)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         ID3D11RenderTargetView** targets = stackalloc ID3D11RenderTargetView*[colorAttachments.Length];

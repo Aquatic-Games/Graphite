@@ -31,12 +31,13 @@ internal sealed unsafe class VulkanTexture : Texture
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        ImageUsageFlags usage = 0;
+        ImageUsageFlags usage = ImageUsageFlags.TransferDstBit;
 
         if ((info.Usage & TextureUsage.ShaderResource) != 0)
             usage |= ImageUsageFlags.SampledBit;
 
         Extent3D extent = new Extent3D(info.Size.Width, info.Size.Height, info.Size.Depth);
+        CurrentLayout = ImageLayout.Undefined;
 
         ImageCreateInfo imageInfo = new()
         {
@@ -47,7 +48,8 @@ internal sealed unsafe class VulkanTexture : Texture
             MipLevels = info.MipLevels,
             ArrayLayers = info.ArraySize,
             Samples = SampleCountFlags.Count1Bit,
-            Usage = usage
+            Usage = usage,
+            InitialLayout = CurrentLayout
         };
 
         AllocationCreateInfo allocInfo = new()

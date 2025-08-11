@@ -119,6 +119,7 @@ cl.Begin();
 cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
+cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
 cl.End();
 device.ExecuteCommandList(cl);
 

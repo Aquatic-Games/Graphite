@@ -25,7 +25,7 @@ public abstract class CommandList : IDisposable
     /// <remarks>This is a transfer operation, and cannot occur inside a render pass.</remarks>
     public abstract void CopyBufferToBuffer(Buffer src, uint srcOffset, Buffer dest, uint destOffset, uint copySize = 0);
 
-    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
+    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
         Offset3D offset = default);
 
     /// <summary>
