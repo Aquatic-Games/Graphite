@@ -6,7 +6,7 @@ public static class DeviceExtensions
         string entryPoint)
     {
         byte[] compiled =
-            SpirvTools.TranspileSpirv(device.Backend, spirv, stage, entryPoint, out ShaderMappingInfo mapping);
+            Compiler.TranspileSpirv(device.Backend, spirv, stage, entryPoint, out ShaderMappingInfo mapping);
 
         return device.CreateShaderModule(compiled, entryPoint, mapping);
     }

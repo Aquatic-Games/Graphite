@@ -41,7 +41,7 @@ public abstract class Instance : IDisposable
     public abstract void Dispose();
 
     /// <summary>
-    /// Create an <see cref="Instance"/>. This will automatically pick the best <see cref="Backend"/> for the current
+    /// Create an <see cref="Instance"/>. This will automatically pick the best <see cref="Graphite.Backend"/> for the current
     /// system.
     /// </summary>
     /// <param name="info">The <see cref="InstanceInfo"/> used to create the instance.</param>

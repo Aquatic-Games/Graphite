@@ -1,7 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Graphite.Core;
 using Silk.NET.SPIRV;
 using Silk.NET.SPIRV.Cross;
@@ -9,16 +7,26 @@ using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
 using GrBackend = Graphite.Backend;
 using SpvBackend = Silk.NET.SPIRV.Cross.Backend;
+using SpvCompiler = Silk.NET.SPIRV.Cross.Compiler;
 
 namespace Graphite.ShaderTools;
 
-public static unsafe class SpirvTools
+public static unsafe class Compiler
 {
     private static readonly Cross _spirv;
 
-    static SpirvTools()
+    static Compiler()
     {
         _spirv = Cross.GetApi();
+    }
+
+    public static byte[] CompileHLSL(GrBackend backend, ShaderStage stage, string hlsl, string entryPoint,
+        out ShaderMappingInfo mapping)
+    {
+        if (backend == GrBackend.D3D12)
+            throw new NotImplementedException();
+        
+        IDXC
     }
 
     public static byte[] TranspileSpirv(GrBackend backend, byte[] spirv, ShaderStage stage, string entryPoint,
@@ -77,7 +85,7 @@ public static unsafe class SpirvTools
                     throw new Exception($"Failed to parse Spir-V: {_spirv.ContextGetLastErrorStringS(context)}");
             }
 
-            Compiler* compiler;
+            SpvCompiler* compiler;
             CheckResult(_spirv.ContextCreateCompiler(context, spvBackend, ir, CaptureMode.TakeOwnership, &compiler),
                 "Create compiler");
 
