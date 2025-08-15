@@ -5,12 +5,16 @@ using Silk.NET.SPIRV;
 using Silk.NET.SPIRV.Cross;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
+using static TerraFX.Interop.DirectX.DirectX;
+using static TerraFX.Interop.Windows.CLSID;
+using static TerraFX.Interop.Windows.Windows;
 using GrBackend = Graphite.Backend;
 using SpvBackend = Silk.NET.SPIRV.Cross.Backend;
 using SpvCompiler = Silk.NET.SPIRV.Cross.Compiler;
 
 namespace Graphite.ShaderTools;
 
+[SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 public static unsafe class Compiler
 {
     private static readonly Cross _spirv;
@@ -21,12 +25,75 @@ public static unsafe class Compiler
     }
 
     public static byte[] CompileHLSL(GrBackend backend, ShaderStage stage, string hlsl, string entryPoint,
-        out ShaderMappingInfo mapping)
+        out ShaderMappingInfo mapping, string? includeDir = null, bool debug = false)
     {
+        // Use DXC to compile SM6 HLSL into bytecode. Typically Spir-V which then gets passed to TranspileSpirv so it
+        // can be in the correct format for each backend.
+        // D3D12 backend has a special case, as DXIL is the primary target of DXC. So it's pointless to compile to Spir-V,
+        // then transpile it back to DXIL again. So for D3D12 we compile straight to DXIL.
+        // The reason the D3D11 backend doesn't directly compile to DXBC is because we must support descriptor sets
+        // which are only "supported" in SM5.1 and up. We could technically compile SM5.1 to FXC instead as
+        // right now Graphite doesn't support any features offered by SM6, however it's just easier to do it this way.
+        
+        // TODO: CompileHLSLToSpirV: Very simple to do, just call CompileHLSL with Backend.Vulkan.
+        // Or alternatively move some functionality from this method into that one and call that method in this one.
+        
+        Guid dxcUtils = CLSID_DxcUtils;
+        Guid dxcCompiler = CLSID_DxcCompiler;
+
+        IDxcUtils* utils;
+        CheckResult(DxcCreateInstance(&dxcUtils, __uuidof<IDxcUtils>(), (void**) &utils),
+            "Create DXC utils");
+
+        IDxcCompiler3* compiler;
+        CheckResult(DxcCreateInstance(&dxcCompiler, __uuidof<IDxcCompiler3>(), (void**) &compiler),
+            "Create DXC compiler");
+
+        string profile = stage switch
+        {
+            ShaderStage.Vertex => "vs_6_0",
+            ShaderStage.Pixel => "ps_6_0",
+            _ => throw new ArgumentOutOfRangeException(nameof(stage), stage, null)
+        };
+
+        List<string> args = [];
+        
+        if (backend != GrBackend.D3D12)
+            args.Add("-spirv");
+
+        if (includeDir != null)
+        {
+            args.Add("-I");
+            args.Add(includeDir);
+        }
+        
+        if (debug)
+            args.Add("-Od");
+
+        using Utf8String pHlsl = hlsl;
+        using DxcString pEntryPoint = entryPoint;
+        using DxcString pProfile = profile;
+        using DxcStringArray pArgs = new DxcStringArray(args);
+
+        IDxcCompilerArgs* compilerArgs;
+        CheckResult(utils->BuildArguments(null, pEntryPoint, pProfile, pArgs, pArgs.Length, null, 0, &compilerArgs),
+            "Build arguments");
+
+        IDxcIncludeHandler* includeHandler;
+        CheckResult(utils->CreateDefaultIncludeHandler(&includeHandler), "Create include handler");
+
+        DxcBuffer buffer = new()
+        {
+            Ptr = (void*) pHlsl.Handle,
+            Size = (nuint) hlsl.Length
+        };
+        
+        IDxcResult result = 
+        
         if (backend == GrBackend.D3D12)
             throw new NotImplementedException();
-        
-        IDXC
+
+        throw new NotImplementedException();
     }
 
     public static byte[] TranspileSpirv(GrBackend backend, byte[] spirv, ShaderStage stage, string entryPoint,
@@ -133,8 +200,7 @@ public static unsafe class Compiler
 
         throw new NotImplementedException();
     }
-
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
+    
     private static byte[] CompileDXBC(byte* hlsl, string entryPoint, ShaderStage stage)
     {
         nuint hlslLength = strlen(hlsl);
@@ -150,7 +216,7 @@ public static unsafe class Compiler
 
         ID3DBlob* blob;
         ID3DBlob* errorBlob;
-        if (DirectX.D3DCompile(hlsl, hlslLength, null, null, null, pEntryPoint, pTarget, 0, 0, &blob, &errorBlob)
+        if (D3DCompile(hlsl, hlslLength, null, null, null, pEntryPoint, pTarget, 0, 0, &blob, &errorBlob)
             .FAILED)
         {
             throw new Exception($"Failed to compile shader: {new string((sbyte*) errorBlob->GetBufferPointer())}");
@@ -171,6 +237,12 @@ public static unsafe class Compiler
     {
         if (result != Result.Success)
             throw new Exception($"Spirv-Cross operation '{operation}' failed: {result}");
+    }
+
+    private static void CheckResult(HRESULT result, string operation)
+    {
+        if (result.FAILED)
+            throw new Exception($"DXC operation '{operation}' failed with HRESULT: 0x{result.Value:x8}");
     }
 
     private static nuint strlen(byte* str)
