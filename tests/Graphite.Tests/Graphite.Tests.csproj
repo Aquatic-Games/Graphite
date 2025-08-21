@@ -20,8 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="*_v.*" CopyToOutputDirectory="PreserveNewest" />
-      <None Include="*_p.*" CopyToOutputDirectory="PreserveNewest" />
+      <None Include="*.hlsl" CopyToOutputDirectory="PreserveNewest" />
       <None Update="DEBUG.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>

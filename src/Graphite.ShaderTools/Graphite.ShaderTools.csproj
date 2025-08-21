@@ -15,5 +15,18 @@
     <ItemGroup>
       <ProjectReference Include="..\Graphite\Graphite.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+        
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="dxcompiler.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="libdxcompiler.so">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
 
 </Project>

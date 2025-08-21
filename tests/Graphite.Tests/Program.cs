@@ -126,11 +126,10 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();
 
-byte[] vShader = File.ReadAllBytes("Shader_v.spv");
-byte[] pShader = File.ReadAllBytes("Shader_p.spv");
+string shader = File.ReadAllText("Shader.hlsl");
 
-ShaderModule vertexShader = device.CreateShaderModuleFromSpirv(ShaderStage.Vertex, vShader, "VSMain");
-ShaderModule pixelShader = device.CreateShaderModuleFromSpirv(ShaderStage.Pixel, pShader, "PSMain");
+ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
+ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
 DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));

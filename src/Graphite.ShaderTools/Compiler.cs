@@ -14,6 +14,9 @@ using SpvCompiler = Silk.NET.SPIRV.Cross.Compiler;
 
 namespace Graphite.ShaderTools;
 
+/// <summary>
+/// Contains various methods useful for compiling and transpiling shaders into code for <see cref="Backend"/>s to consume.
+/// </summary>
 [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility")]
 public static unsafe class Compiler
 {
@@ -24,6 +27,18 @@ public static unsafe class Compiler
         _spirv = Cross.GetApi();
     }
 
+    /// <summary>
+    /// Compile HLSL (SM6.0) into bytecode that the given <paramref name="backend"/> can use in the creation of a <see cref="ShaderModule"/>.
+    /// </summary>
+    /// <param name="backend">The <see cref="Backend"/> to compile for.</param>
+    /// <param name="stage">The <see cref="ShaderStage"/> to compile for.</param>
+    /// <param name="hlsl">The HLSL (Shader Model 6.0) code.</param>
+    /// <param name="entryPoint">The entry point of the shader.</param>
+    /// <param name="mapping">Returns the <see cref="ShaderMappingInfo"/> which defines how the shader should be remapped for the given <paramref name="backend"/>.</param>
+    /// <param name="includeDir">The include directory of the code, if any.</param>
+    /// <param name="debug">If true, the shader will be compiled with debugging enabled. (-Od parameter)</param>
+    /// <returns>The shader bytecode.</returns>
+    /// <remarks>This does <b>NOT</b> only compile to SPIR-V. It will compile to the correct shader format of the given <paramref name="backend"/>.</remarks>
     public static byte[] CompileHLSL(GrBackend backend, ShaderStage stage, string hlsl, string entryPoint,
         out ShaderMappingInfo mapping, string? includeDir = null, bool debug = false)
     {
@@ -87,15 +102,46 @@ public static unsafe class Compiler
             Ptr = (void*) pHlsl.Handle,
             Size = (nuint) hlsl.Length
         };
-        
-        IDxcResult result = 
+
+        IDxcResult* compileResult;
+        CheckResult(
+            compiler->Compile(&buffer, compilerArgs->GetArguments(), compilerArgs->GetCount(), includeHandler,
+                __uuidof<IDxcResult>(), (void**) &compileResult), "Compile");
+
+        HRESULT compileStatus;
+        CheckResult(compileResult->GetStatus(&compileStatus), "Get compile status");
+
+        if (compileStatus.FAILED)
+        {
+            IDxcBlobEncoding* errorBlob;
+            CheckResult(compileResult->GetErrorBuffer(&errorBlob), "Get error buffer");
+            // TODO: CompilationException
+            throw new Exception(
+                $"Failed to compile {stage} shader: {new string((sbyte*) errorBlob->GetBufferPointer())}");
+        }
+
+        IDxcBlob* bResult;
+        CheckResult(compileResult->GetResult(&bResult), "Get result");
+
+        byte[] result = new byte[bResult->GetBufferSize()];
+        fixed (byte* pResult = result)
+            Unsafe.CopyBlock(pResult, bResult->GetBufferPointer(), (uint) result.Length);
         
         if (backend == GrBackend.D3D12)
             throw new NotImplementedException();
 
-        throw new NotImplementedException();
+        return TranspileSpirv(backend, result, stage, entryPoint, out mapping);
     }
 
+    /// <summary>
+    /// Transpile SPIR-V bytecode into the correct shader format for the given <paramref name="backend"/>.
+    /// </summary>
+    /// <param name="backend">The <see cref="Backend"/> to compile for.</param>
+    /// <param name="spirv">The SPIR-V bytecode.</param>
+    /// <param name="stage">The <see cref="ShaderStage"/> to compile for.</param>
+    /// <param name="entryPoint">The entry point of the shader.</param>
+    /// <param name="mapping">Returns the <see cref="ShaderMappingInfo"/> which defines how the shader should be remapped for the given <paramref name="backend"/>.</param>
+    /// <returns>The shader bytecode.</returns>
     public static byte[] TranspileSpirv(GrBackend backend, byte[] spirv, ShaderStage stage, string entryPoint,
         out ShaderMappingInfo mapping)
     {
@@ -201,6 +247,7 @@ public static unsafe class Compiler
         throw new NotImplementedException();
     }
     
+    // Compile SM5 HLSL to DXBC.
     private static byte[] CompileDXBC(byte* hlsl, string entryPoint, ShaderStage stage)
     {
         nuint hlslLength = strlen(hlsl);
