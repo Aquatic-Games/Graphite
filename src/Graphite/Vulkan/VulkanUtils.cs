@@ -120,6 +120,7 @@ internal static class VulkanUtils
         return type switch
         {
             DescriptorType.ConstantBuffer => VkDescriptorType.UniformBuffer,
+            DescriptorType.Texture => VkDescriptorType.CombinedImageSampler,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

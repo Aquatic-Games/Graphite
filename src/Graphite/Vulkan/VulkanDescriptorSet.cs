@@ -10,6 +10,7 @@ internal sealed unsafe class VulkanDescriptorSet : DescriptorSet
     private readonly VkDevice _device;
 
     private readonly DescriptorPool _pool;
+    private readonly Sampler _sampler;
 
     public readonly VkDescriptorSet Set;
     
@@ -64,6 +65,7 @@ internal sealed unsafe class VulkanDescriptorSet : DescriptorSet
             {
                 ref readonly Descriptor descriptor = ref descriptors[i];
                 DescriptorBufferInfo bufferInfo;
+                DescriptorImageInfo imageInfo;
                 
                 writeSets[i] = new WriteDescriptorSet
                 {
@@ -82,6 +84,30 @@ internal sealed unsafe class VulkanDescriptorSet : DescriptorSet
                     bufferInfo.Range = descriptor.BufferRange == uint.MaxValue ? Vk.WholeSize : descriptor.BufferRange;
                     writeSets[i].PBufferInfo = &bufferInfo;
                 }
+
+                if (descriptor.Texture is { } texture)
+                {
+                    SamplerCreateInfo samplerInfo = new()
+                    {
+                        SType = StructureType.SamplerCreateInfo,
+                        MagFilter = Filter.Linear,
+                        MinFilter = Filter.Linear,
+                        MipmapMode = SamplerMipmapMode.Linear,
+                        AddressModeU = SamplerAddressMode.Repeat,
+                        AddressModeW = SamplerAddressMode.Repeat
+                    };
+                    
+                    // Create a temporary sampler
+                    // TODO: Samplers
+                    GraphiteLog.Log("Creating temporary sampler.");
+                    _vk.CreateSampler(_device, &samplerInfo, null, out _sampler).Check("Create sampler");
+                    
+                    VulkanTexture vkTexture = (VulkanTexture) texture;
+                    imageInfo.ImageLayout = vkTexture.CurrentLayout;
+                    imageInfo.ImageView = vkTexture.View;
+                    imageInfo.Sampler = _sampler;
+                    writeSets[i].PImageInfo = &imageInfo;
+                }
             }
 
             _vk.UpdateDescriptorSets(_device, (uint) descriptors.Length, writeSets, null);
@@ -90,6 +116,9 @@ internal sealed unsafe class VulkanDescriptorSet : DescriptorSet
     
     public override void Dispose()
     {
+        if (_sampler.Handle != 0)
+            _vk.DestroySampler(_device, _sampler, null);
+        
         // Destroy the pool and therefore free all allocated descriptor sets.
         GraphiteLog.Log("Destroying descriptor pool.");
         _vk.DestroyDescriptorPool(_device, _pool, null);

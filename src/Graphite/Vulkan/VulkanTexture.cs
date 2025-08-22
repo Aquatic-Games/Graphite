@@ -25,9 +25,9 @@ internal sealed unsafe class VulkanTexture : Texture
         _device = device;
         _allocator = allocator;
         
-        ImageType type = info.Type switch
+        (ImageType type, ImageViewType viewType) = info.Type switch
         {
-            TextureType.Texture2D => ImageType.Type2D,
+            TextureType.Texture2D => (ImageType.Type2D, ImageViewType.Type2D),
             _ => throw new ArgumentOutOfRangeException()
         };
 
@@ -59,6 +59,32 @@ internal sealed unsafe class VulkanTexture : Texture
         
         GraphiteLog.Log("Creating image.");
         Vma.CreateImage(_allocator, &imageInfo, &allocInfo, out Image, out Allocation, null).Check("Create image");
+
+        ImageViewCreateInfo viewInfo = new()
+        {
+            SType = StructureType.ImageViewCreateInfo,
+            Image = Image,
+            Format = imageInfo.Format,
+            ViewType = viewType,
+            Components = new ComponentMapping
+            {
+                R = ComponentSwizzle.Identity,
+                G = ComponentSwizzle.Identity,
+                B = ComponentSwizzle.Identity,
+                A = ComponentSwizzle.Identity
+            },
+            SubresourceRange = new ImageSubresourceRange
+            {
+                AspectMask = ImageAspectFlags.ColorBit,
+                LayerCount = 1,
+                BaseArrayLayer = 0,
+                LevelCount = info.MipLevels,
+                BaseMipLevel = 0
+            }
+        };
+        
+        GraphiteLog.Log("Creating image view.");
+        _vk.CreateImageView(_device, &viewInfo, null, out View).Check("Create image view");
     }
     
     public VulkanTexture(Vk vk, Image image, VkDevice device, Extent2D extent, Format format)
@@ -83,7 +109,7 @@ internal sealed unsafe class VulkanTexture : Texture
                 B = ComponentSwizzle.Identity,
                 A = ComponentSwizzle.Identity
             },
-            SubresourceRange = new ImageSubresourceRange()
+            SubresourceRange = new ImageSubresourceRange
             {
                 AspectMask = ImageAspectFlags.ColorBit,
                 LayerCount = 1,

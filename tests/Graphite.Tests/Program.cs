@@ -70,10 +70,10 @@ Swapchain swapchain =
 
 ReadOnlySpan<float> vertices =
 [
-    -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
-    -0.5f, +0.5f, 0.0f, 1.0f, 0.0f,
-    +0.5f, +0.5f, 0.0f, 0.0f, 1.0f,
-    +0.5f, -0.5f, 0.0f, 0.0f, 0.0f
+    -0.5f, -0.5f, 0.0f, 0.0f,
+    -0.5f, +0.5f, 0.0f, 1.0f,
+    +0.5f, +0.5f, 1.0f, 1.0f,
+    +0.5f, -0.5f, 1.0f, 0.0f,
 ];
 
 ReadOnlySpan<ushort> indices =
@@ -96,8 +96,8 @@ uint textureSize = (uint) (result.Width * result.Height * 4); // 32bpp
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
 Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
-//Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
-//    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
+Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
+    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
 
 Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize + textureSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
@@ -120,7 +120,7 @@ cl.Begin();
 cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
-//cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
+cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
 cl.End();
 device.ExecuteCommandList(cl);
 
@@ -132,8 +132,12 @@ ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
 DescriptorLayout transformLayout =
-    device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
-DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
+    device.CreateDescriptorLayout(
+        new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex),
+        new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel));
+DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout,
+    new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer),
+    new Descriptor(1, DescriptorType.Texture, texture: texture));
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -143,7 +147,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
     InputLayout =
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
-        new InputElementDescription(Format.R32G32B32_Float, 8, 1, 0)
+        new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
     Descriptors = [transformLayout]
 });
@@ -181,7 +185,7 @@ while (alive)
     
     cl.SetGraphicsPipeline(pipeline);
     cl.SetDescriptorSet(0, pipeline, transformSet);
-    cl.SetVertexBuffer(0, vertexBuffer, 5 * sizeof(float));
+    cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
     //cl.Draw(6);
@@ -196,6 +200,7 @@ while (alive)
 pipeline.Dispose();
 transformSet.Dispose();
 transformLayout.Dispose();
+texture.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();

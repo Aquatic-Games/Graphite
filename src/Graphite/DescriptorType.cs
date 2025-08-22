@@ -2,5 +2,6 @@ namespace Graphite;
 
 public enum DescriptorType
 {
-    ConstantBuffer
+    ConstantBuffer,
+    Texture
 }

@@ -15,6 +15,9 @@ cbuffer TransformMatrix : register(b0)
     float4x4 Transform;
 }
 
+Texture2D Texture    : register(t1);
+SamplerState Sampler : register(s1);
+
 VSOutput VSMain(const in VSInput input)
 {
     VSOutput output;
@@ -28,5 +31,5 @@ VSOutput VSMain(const in VSInput input)
 
 float4 PSMain(const in VSOutput input): SV_Target0
 {
-    return float4(input.TexCoord, 0.0, 1.0);
+    return Texture.Sample(Sampler, input.TexCoord);
 }
