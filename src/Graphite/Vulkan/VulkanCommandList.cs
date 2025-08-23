@@ -90,11 +90,70 @@ internal sealed unsafe class VulkanCommandList : CommandList
             }
         };
 
-        vkDest.Transition(Buffer, ImageLayout.TransferDstOptimal);
+        vkDest.Transition(Buffer, vkDest.CurrentLayout, ImageLayout.TransferDstOptimal, AccessFlags.TransferWriteBit,
+            AccessFlags.TransferReadBit, PipelineStageFlags.TransferBit, PipelineStageFlags.TransferBit);
         _vk.CmdCopyBufferToImage(Buffer, vkSrc.Buffer, vkDest.Image, vkDest.CurrentLayout, 1, &copy);
 
         if (vkDest.IsSampled)
-            vkDest.Transition(Buffer, ImageLayout.ShaderReadOnlyOptimal);
+        {
+            vkDest.Transition(Buffer, ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal, AccessFlags.TransferReadBit,
+                AccessFlags.ShaderReadBit, PipelineStageFlags.TransferBit, PipelineStageFlags.AllGraphicsBit);
+        }
+    }
+
+    public override void GenerateMipmaps(Texture texture)
+    {
+        VulkanTexture vkTexture = (VulkanTexture) texture;
+
+        // TODO: Look into image transitions. I don't quite understand what's going on here. Vulkan sample doesn't seem
+        // to explain it in detail, or maybe I've misread it.
+        
+        vkTexture.Transition(Buffer, vkTexture.CurrentLayout, ImageLayout.TransferSrcOptimal,
+            AccessFlags.TransferWriteBit, AccessFlags.TransferReadBit, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.TransferBit);
+
+        for (uint i = 1; i < vkTexture.MipLevels; i++)
+        {
+            ImageBlit blit = new ImageBlit
+            {
+                SrcSubresource = new ImageSubresourceLayers
+                {
+                    AspectMask = ImageAspectFlags.ColorBit,
+                    LayerCount = 1,
+                    MipLevel = i - 1
+                },
+                DstSubresource = new ImageSubresourceLayers
+                {
+                    AspectMask = ImageAspectFlags.ColorBit,
+                    LayerCount = 1,
+                    MipLevel = i
+                }
+            };
+
+            // TODO: Look into this. Why is the offset 1?
+            blit.SrcOffsets[1].X = (int) (vkTexture.Info.Size.Width >> (int) (i - 1));
+            blit.SrcOffsets[1].Y = (int) (vkTexture.Info.Size.Height >> (int) (i - 1));
+            blit.SrcOffsets[1].Z = 1;
+            
+            blit.DstOffsets[1].X = (int) (vkTexture.Info.Size.Width >> (int) i);
+            blit.DstOffsets[1].Y = (int) (vkTexture.Info.Size.Height >> (int) i);
+            blit.DstOffsets[1].Z = 1;
+
+            vkTexture.Transition(Buffer, ImageLayout.Undefined, ImageLayout.TransferDstOptimal, 0,
+                AccessFlags.TransferWriteBit, PipelineStageFlags.TransferBit, PipelineStageFlags.TransferBit,
+                baseMipLevel: i);
+
+            _vk.CmdBlitImage(Buffer, vkTexture.Image, ImageLayout.TransferSrcOptimal, vkTexture.Image,
+                ImageLayout.TransferDstOptimal, 1, &blit, Filter.Linear);
+
+            vkTexture.Transition(Buffer, ImageLayout.TransferDstOptimal, ImageLayout.TransferSrcOptimal,
+                AccessFlags.TransferWriteBit, AccessFlags.TransferReadBit, PipelineStageFlags.TransferBit,
+                PipelineStageFlags.TransferBit, baseMipLevel: i);
+        }
+
+        vkTexture.Transition(Buffer, ImageLayout.TransferSrcOptimal, ImageLayout.ShaderReadOnlyOptimal,
+            AccessFlags.TransferReadBit, AccessFlags.TransferWriteBit, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.AllGraphicsBit, mipLevels: vkTexture.MipLevels);
     }
 
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
@@ -105,7 +164,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
             ref readonly ColorAttachmentInfo attachment = ref colorAttachments[i];
             VulkanTexture texture = (VulkanTexture) attachment.Texture;
             ColorF color = attachment.ClearColor;
-            
+
             if (texture.CurrentLayout != ImageLayout.ColorAttachmentOptimal)
                 texture.Transition(Buffer, ImageLayout.ColorAttachmentOptimal);
 

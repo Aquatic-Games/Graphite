@@ -60,6 +60,11 @@ internal sealed unsafe class D3D11CommandList : CommandList
         throw new NotImplementedException();
     }
 
+    public override void GenerateMipmaps(Texture texture)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         ID3D11RenderTargetView** targets = stackalloc ID3D11RenderTargetView*[colorAttachments.Length];

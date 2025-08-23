@@ -97,7 +97,7 @@ Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffe
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
 Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
 Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
-    new Size2D((uint) result.Width, (uint) result.Height), 1, TextureUsage.ShaderResource));
+    new Size2D((uint) result.Width, (uint) result.Height), 0, TextureUsage.ShaderResource | TextureUsage.GenerateMips));
 
 Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize + textureSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
@@ -121,6 +121,7 @@ cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
 cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
+cl.GenerateMipmaps(texture);
 cl.End();
 device.ExecuteCommandList(cl);
 

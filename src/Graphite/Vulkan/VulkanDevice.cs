@@ -208,7 +208,7 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override Texture CreateTexture(in TextureInfo info)
     {
-        return new VulkanTexture(_vk, Device, _allocator, in info);
+        return new VulkanTexture(_vk, this, _allocator, in info);
     }
 
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)

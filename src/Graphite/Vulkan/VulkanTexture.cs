@@ -17,13 +17,14 @@ internal sealed unsafe class VulkanTexture : Texture
 
     public readonly bool IsSwapchainTexture;
     public readonly bool IsSampled;
+    public readonly uint MipLevels;
 
     public ImageLayout CurrentLayout;
 
-    public VulkanTexture(Vk vk, VkDevice device, Allocator* allocator, ref readonly TextureInfo info) : base(info)
+    public VulkanTexture(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly TextureInfo info) : base(info)
     {
         _vk = vk;
-        _device = device;
+        _device = device.Device;
         _allocator = allocator;
         
         (ImageType type, ImageViewType viewType) = info.Type switch
@@ -40,8 +41,14 @@ internal sealed unsafe class VulkanTexture : Texture
             IsSampled = true;
         }
 
+        if ((info.Usage & TextureUsage.GenerateMips) != 0)
+            usage |= ImageUsageFlags.TransferSrcBit;
+
         Extent3D extent = new Extent3D(info.Size.Width, info.Size.Height, info.Size.Depth);
         CurrentLayout = ImageLayout.Undefined;
+        MipLevels = info.MipLevels == 0
+            ? GraphiteUtils.CalculateMipLevels(info.Size.Width, info.Size.Height)
+            : info.MipLevels;
 
         ImageCreateInfo imageInfo = new()
         {
@@ -49,7 +56,7 @@ internal sealed unsafe class VulkanTexture : Texture
             ImageType = type,
             Format = info.Format.ToVk(),
             Extent = extent,
-            MipLevels = info.MipLevels,
+            MipLevels = MipLevels,
             ArrayLayers = info.ArraySize,
             Samples = SampleCountFlags.Count1Bit,
             Usage = usage,
@@ -82,13 +89,18 @@ internal sealed unsafe class VulkanTexture : Texture
                 AspectMask = ImageAspectFlags.ColorBit,
                 LayerCount = 1,
                 BaseArrayLayer = 0,
-                LevelCount = info.MipLevels,
+                LevelCount = MipLevels,
                 BaseMipLevel = 0
             }
         };
         
         GraphiteLog.Log("Creating image view.");
         _vk.CreateImageView(_device, &viewInfo, null, out View).Check("Create image view");
+        
+        CommandBuffer buffer = device.BeginCommands();
+        Transition(buffer, ImageLayout.Undefined, ImageLayout.ShaderReadOnlyOptimal, 0, AccessFlags.ShaderReadBit,
+            PipelineStageFlags.AllGraphicsBit, PipelineStageFlags.AllGraphicsBit, mipLevels: MipLevels);
+        device.EndCommands();
     }
     
     public VulkanTexture(Vk vk, Image image, VkDevice device, Extent2D extent, Format format)
@@ -139,28 +151,34 @@ internal sealed unsafe class VulkanTexture : Texture
         Vma.DestroyImage(_allocator, Image, Allocation);
     }
 
-    public void Transition(CommandBuffer cb, ImageLayout @new)
+    public void Transition(CommandBuffer cb, ImageLayout old, ImageLayout @new, AccessFlags srcAccess, AccessFlags dstAccess,
+        PipelineStageFlags srcFlags, PipelineStageFlags dstFlags, ImageAspectFlags aspect = ImageAspectFlags.ColorBit,
+        uint baseMipLevel = 0, uint mipLevels = 1, uint baseArrayLayer = 0, uint arrayLayers = 1)
     {
         ImageMemoryBarrier memoryBarrier = new()
         {
             SType = StructureType.ImageMemoryBarrier,
             Image = Image,
-            OldLayout = CurrentLayout,
+            OldLayout = old,
             NewLayout = @new,
-            DstAccessMask = AccessFlags.ColorAttachmentWriteBit,
+            SrcAccessMask = srcAccess,
+            DstAccessMask = dstAccess,
             SubresourceRange = new ImageSubresourceRange()
             {
-                AspectMask = ImageAspectFlags.ColorBit,
-                LayerCount = 1,
-                BaseArrayLayer = 0,
-                LevelCount = 1,
-                BaseMipLevel = 0
+                AspectMask = aspect,
+                LayerCount = arrayLayers,
+                BaseArrayLayer = baseArrayLayer,
+                LevelCount = mipLevels,
+                BaseMipLevel = baseMipLevel
             }
         };
 
-        _vk.CmdPipelineBarrier(cb, PipelineStageFlags.ColorAttachmentOutputBit,
-            PipelineStageFlags.ColorAttachmentOutputBit, 0, 0, null, 0, null, 1, &memoryBarrier);
+        _vk.CmdPipelineBarrier(cb, srcFlags, dstFlags, 0, 0, null, 0, null, 1, &memoryBarrier);
 
         CurrentLayout = @new;
     }
+
+    public void Transition(CommandBuffer cb, ImageLayout @new)
+        => Transition(cb, CurrentLayout, @new, AccessFlags.ColorAttachmentReadBit, AccessFlags.ColorAttachmentReadBit,
+            PipelineStageFlags.ColorAttachmentOutputBit, PipelineStageFlags.ColorAttachmentOutputBit);
 }

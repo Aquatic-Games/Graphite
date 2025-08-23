@@ -37,6 +37,8 @@ public abstract class CommandList : IDisposable
     public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
         Offset3D offset = default);
 
+    public abstract void GenerateMipmaps(Texture texture);
+
     /// <summary>
     /// Begin a render pass with the given color attachments.
     /// </summary>
