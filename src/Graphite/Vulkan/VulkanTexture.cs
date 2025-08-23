@@ -16,6 +16,7 @@ internal sealed unsafe class VulkanTexture : Texture
     public readonly Allocation* Allocation;
 
     public readonly bool IsSwapchainTexture;
+    public readonly bool IsSampled;
 
     public ImageLayout CurrentLayout;
 
@@ -34,7 +35,10 @@ internal sealed unsafe class VulkanTexture : Texture
         ImageUsageFlags usage = ImageUsageFlags.TransferDstBit;
 
         if ((info.Usage & TextureUsage.ShaderResource) != 0)
+        {
             usage |= ImageUsageFlags.SampledBit;
+            IsSampled = true;
+        }
 
         Extent3D extent = new Extent3D(info.Size.Width, info.Size.Height, info.Size.Depth);
         CurrentLayout = ImageLayout.Undefined;

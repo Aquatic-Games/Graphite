@@ -92,6 +92,9 @@ internal sealed unsafe class VulkanCommandList : CommandList
 
         vkDest.Transition(Buffer, ImageLayout.TransferDstOptimal);
         _vk.CmdCopyBufferToImage(Buffer, vkSrc.Buffer, vkDest.Image, vkDest.CurrentLayout, 1, &copy);
+
+        if (vkDest.IsSampled)
+            vkDest.Transition(Buffer, ImageLayout.ShaderReadOnlyOptimal);
     }
 
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)

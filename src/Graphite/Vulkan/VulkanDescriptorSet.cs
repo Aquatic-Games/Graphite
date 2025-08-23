@@ -1,4 +1,5 @@
 global using VkDescriptorSet = Silk.NET.Vulkan.DescriptorSet;
+using System.Diagnostics;
 using Graphite.Core;
 using Silk.NET.Vulkan;
 
@@ -103,7 +104,10 @@ internal sealed unsafe class VulkanDescriptorSet : DescriptorSet
                     _vk.CreateSampler(_device, &samplerInfo, null, out _sampler).Check("Create sampler");
                     
                     VulkanTexture vkTexture = (VulkanTexture) texture;
-                    imageInfo.ImageLayout = vkTexture.CurrentLayout;
+                    Debug.Assert(vkTexture.IsSampled,
+                        "Texture has not been created with the \"TextureUsage.ShaderResource\" flag.");
+                    
+                    imageInfo.ImageLayout = ImageLayout.ShaderReadOnlyOptimal;
                     imageInfo.ImageView = vkTexture.View;
                     imageInfo.Sampler = _sampler;
                     writeSets[i].PImageInfo = &imageInfo;

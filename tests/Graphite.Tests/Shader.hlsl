@@ -32,4 +32,5 @@ VSOutput VSMain(const in VSInput input)
 float4 PSMain(const in VSOutput input): SV_Target0
 {
     return Texture.Sample(Sampler, input.TexCoord);
+    //return float4(input.TexCoord, 0.0, 1.0);
 }
