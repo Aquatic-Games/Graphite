@@ -14,8 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="SDL3-CS" Version="3.2.16.4" />
-      <PackageReference Include="SDL3-CS.Native" Version="3.2.18.2" />
+      <PackageReference Include="SDL3-CS" Version="3.2.20" />
       <PackageReference Include="StbImageSharp" Version="2.30.15" />
     </ItemGroup>
 

@@ -1,3 +1,5 @@
+using Graphite.OpenGL;
+
 namespace Graphite;
 
 /// <summary>
@@ -16,21 +18,20 @@ public struct InstanceInfo
     public bool Debug;
 
     /// <summary>
-    /// The GetProcAddress function for the OpenGL backend. This does not need to be provided if the OpenGL backend
-    /// will not be used.
+    /// The OpenGL context info, if any. You do not need to provide this if you will not be using the OpenGL backend. 
     /// </summary>
-    public Func<string, nint>? GLGetProcAddressFunc;
+    public GLContext? GLContext;
 
     /// <summary>
     /// Create a new <see cref="InstanceInfo"/>.
     /// </summary>
     /// <param name="appName">The name of the application. This is used in some backends.</param>
     /// <param name="debug">Enable graphics debugging.</param>
-    /// <param name="glGetProcAddressFunc">The GetProcAddress function for the OpenGL backend.</param>
-    public InstanceInfo(string appName, bool debug = false, Func<string, nint>? glGetProcAddressFunc = null)
+    /// <param name="context">The OpenGL context info, if any.</param>
+    public InstanceInfo(string appName, bool debug = false, GLContext? context = null)
     {
         AppName = appName;
         Debug = debug;
-        GLGetProcAddressFunc = glGetProcAddressFunc;
+        GLContext = context;
     }
 }

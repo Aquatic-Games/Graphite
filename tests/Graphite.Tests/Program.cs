@@ -1,8 +1,10 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Graphite;
 using Graphite.Core;
+using Graphite.OpenGL;
 using Graphite.ShaderTools;
 using SDL3;
 using StbImageSharp;
@@ -22,12 +24,23 @@ if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
 const int width = 1280;
 const int height = 720;
 
-// Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
-IntPtr window = SDL.CreateWindow($"Graphite.Tests", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMajorVersion, 4);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMinorVersion, 3);
+SDL.GLSetAttribute(SDL.GLAttr.ContextProfileMask, (int) SDL.GLProfile.Core);
+
+IntPtr window = SDL.CreateWindow("Graphite.Tests", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.OpenGL);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
 
-Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true, s => SDL.GLGetProcAddress(s).));
+IntPtr context = SDL.GLCreateContext(window);
+SDL.GLMakeCurrent(window, context);
+
+Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true, new GLContext(s => Marshal.GetFunctionPointerForDelegate(SDL.GLGetProcAddress(s)),
+    i =>
+    {
+        SDL.GLSetSwapInterval(i);
+        SDL.GLSwapWindow(window);
+    })));
 Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 uint properties = SDL.GetWindowProperties(window);
@@ -62,7 +75,7 @@ else
     throw new PlatformNotSupportedException();
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
-Device device = instance.CreateDevice(surface);
+/*Device device = instance.CreateDevice(surface);
 CommandList cl = device.CreateCommandList();
 Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
@@ -86,7 +99,7 @@ ImageResult result = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), Colo
 
 /*Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
-Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));*/
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
 
 uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
@@ -207,7 +220,7 @@ indexBuffer.Dispose();
 vertexBuffer.Dispose();
 swapchain.Dispose();
 cl.Dispose();
-device.Dispose();
+device.Dispose();*/
 surface.Dispose();
 instance.Dispose();
 SDL.DestroyWindow(window);
