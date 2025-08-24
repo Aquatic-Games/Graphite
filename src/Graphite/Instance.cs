@@ -1,4 +1,5 @@
 ﻿using Graphite.D3D11;
+using Graphite.OpenGL;
 using Graphite.Vulkan;
 
 namespace Graphite;
@@ -50,7 +51,9 @@ public abstract class Instance : IDisposable
     {
         if (OperatingSystem.IsWindows() || (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") ?? "0") == "1")
             return new D3D11Instance(in info);
-        
-        return new VulkanInstance(in info);
+
+        return new GLInstance(in info);
+
+        //return new VulkanInstance(in info);
     }
 }

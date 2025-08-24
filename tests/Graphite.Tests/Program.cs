@@ -19,16 +19,16 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
-Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true));
-Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
-
 const int width = 1280;
 const int height = 720;
 
 // Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
-IntPtr window = SDL.CreateWindow($"Graphite.Tests - {instance.Backend}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+IntPtr window = SDL.CreateWindow($"Graphite.Tests", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
+
+Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true, s => SDL.GLGetProcAddress(s).));
+Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 uint properties = SDL.GetWindowProperties(window);
 SurfaceInfo surfaceInfo;
