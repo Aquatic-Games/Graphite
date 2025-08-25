@@ -3,7 +3,9 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using Graphite;
 using Graphite.Core;
+using Graphite.D3D11;
 using Graphite.ShaderTools;
+using Graphite.Vulkan;
 using SDL3;
 using StbImageSharp;
 using Buffer = Graphite.Buffer;
@@ -19,6 +21,9 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
+//Instance.RegisterBackend<D3D11Backend>();
+Instance.RegisterBackend<VulkanBackend>();
+
 Instance instance = Instance.Create(new InstanceInfo("Graphite.Tests", true));
 Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
@@ -26,7 +31,7 @@ const int width = 1280;
 const int height = 720;
 
 // Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
-IntPtr window = SDL.CreateWindow($"Graphite.Tests - {instance.Backend}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+IntPtr window = SDL.CreateWindow($"Graphite.Tests - {instance.BackendName}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
 

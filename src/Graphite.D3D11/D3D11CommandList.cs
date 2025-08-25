@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
 using static TerraFX.Interop.DirectX.D3D_PRIMITIVE_TOPOLOGY;

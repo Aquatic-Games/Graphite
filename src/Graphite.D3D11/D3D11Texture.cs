@@ -19,8 +19,7 @@ internal sealed unsafe class D3D11Texture : Texture
         GraphiteLog.Log("Creating swapchain render target.");
         fixed (ID3D11RenderTargetView** renderTarget = &RenderTarget)
         {
-            device->CreateRenderTargetView((ID3D11Resource*) Texture, null, renderTarget)
-                .Check("Create swapchain render target");
+            device->CreateRenderTargetView((ID3D11Resource*) Texture, null, renderTarget).Check("Create swapchain render target");
         }
     }
 

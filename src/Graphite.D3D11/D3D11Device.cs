@@ -34,8 +34,7 @@ internal sealed unsafe class D3D11Device : Device
         fixed (ID3D11Device1** device = &_device)
         fixed (ID3D11DeviceContext1** context = &_context)
             D3D11CreateDevice((IDXGIAdapter*) adapter, D3D_DRIVER_TYPE_UNKNOWN, HMODULE.NULL, (uint) flags,
-                    &featureLevel, 1, D3D11_SDK_VERSION, (ID3D11Device**) device, null, (ID3D11DeviceContext**) context)
-                .Check("Create D3D11 device");
+                &featureLevel, 1, D3D11_SDK_VERSION, (ID3D11Device**) device, null, (ID3D11DeviceContext**) context).Check("Create D3D11 device");
     }
     
     public override Swapchain CreateSwapchain(in SwapchainInfo info)

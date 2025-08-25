@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Graphite.Core;
-using Graphite.D3D11;
 
 namespace Graphite;
 /// <summary>

@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
-using TerraFX.Interop.Windows;
 using static TerraFX.Interop.DirectX.DirectX;
 using static TerraFX.Interop.Windows.Windows;
 
@@ -15,7 +14,9 @@ internal sealed unsafe class D3D11Instance : Instance
     private readonly bool _debug;
     private readonly IDXGIFactory1* _factory;
 
-    public override Backend Backend => Backend.D3D11;
+    public override string BackendName => D3D11Backend.Name;
+
+    public override Backend Backend => D3D11Backend.Backend;
     
     public D3D11Instance(ref readonly InstanceInfo info)
     {

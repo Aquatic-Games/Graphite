@@ -28,15 +28,13 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
         // pressed the wrong key and I laughed so I am not changing it
         fixed (ID3D11VertexShader** pBertexShader = &VertexShader)
         {
-            device->CreateVertexShader(vertexShader.Data, vertexShader.DataLength, null, pBertexShader)
-                .Check("Create vertex shader");
+            device->CreateVertexShader(vertexShader.Data, vertexShader.DataLength, null, pBertexShader).Check("Create vertex shader");
         }
         
         // Create the 🅱️ixel shader
         fixed (ID3D11PixelShader** pBixelShader = &PixelShader)
         {
-            device->CreatePixelShader(pixelShader.Data, pixelShader.DataLength, null, pBixelShader)
-                .Check("Create pixel shader");
+            device->CreatePixelShader(pixelShader.Data, pixelShader.DataLength, null, pBixelShader).Check("Create pixel shader");
         }
 
         if (info.InputLayout.Length > 0)
