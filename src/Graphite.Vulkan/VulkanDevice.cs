@@ -1,6 +1,5 @@
 global using VkDevice = Silk.NET.Vulkan.Device;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Core;

@@ -38,8 +38,7 @@ internal sealed unsafe class VulkanSurface : Surface
                 };
 
                 GraphiteLog.Log("Creating Win32 surface.");
-                _win32Surface!.CreateWin32Surface(_instance, &surfaceInfo, null, out Surface)
-                    .Check("Create Win32 surface");
+                _win32Surface!.CreateWin32Surface(_instance, &surfaceInfo, null, out Surface).Check("Create Win32 surface");
                     
                 break;
             }
@@ -57,8 +56,7 @@ internal sealed unsafe class VulkanSurface : Surface
                 };
 
                 GraphiteLog.Log("Creating XLib surface.");
-                _xlibSurface!.CreateXlibSurface(_instance, &surfaceInfo, null, out Surface)
-                    .Check("Create XLib surface");
+                _xlibSurface!.CreateXlibSurface(_instance, &surfaceInfo, null, out Surface).Check("Create XLib surface");
                     
                 break;
             }
@@ -76,8 +74,7 @@ internal sealed unsafe class VulkanSurface : Surface
                 };
 
                 GraphiteLog.Log("Creating XCB surface.");
-                _xcbSurface!.CreateXcbSurface(_instance, &surfaceInfo, null, out Surface)
-                    .Check("Create XCB surface");
+                _xcbSurface!.CreateXcbSurface(_instance, &surfaceInfo, null, out Surface).Check("Create XCB surface");
                     
                 break;
             }
@@ -95,8 +92,7 @@ internal sealed unsafe class VulkanSurface : Surface
                 };
 
                 GraphiteLog.Log("Creating Wayland surface.");
-                _waylandSurface!.CreateWaylandSurface(_instance, &surfaceInfo, null, out Surface)
-                    .Check("Create Wayland surface");
+                _waylandSurface!.CreateWaylandSurface(_instance, &surfaceInfo, null, out Surface).Check("Create Wayland surface");
                     
                 break;
             }

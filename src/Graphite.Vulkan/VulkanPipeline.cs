@@ -191,8 +191,7 @@ internal sealed unsafe class VulkanPipeline : Pipeline
         };
 
         GraphiteLog.Log("Creating pipeline.");
-        _vk.CreateGraphicsPipelines(_device, new PipelineCache(), 1, &pipelineInfo, null, out Pipeline)
-            .Check("Create pipeline");
+        _vk.CreateGraphicsPipelines(_device, new PipelineCache(), 1, &pipelineInfo, null, out Pipeline).Check("Create pipeline");
     }
     
     public override void Dispose()

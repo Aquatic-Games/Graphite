@@ -110,8 +110,7 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
     {
         SurfaceCapabilitiesKHR capabilities;
         _surface.SurfaceExt
-            .GetPhysicalDeviceSurfaceCapabilities(_device.PhysicalDevice, _surface.Surface, &capabilities)
-            .Check("Get surface capabilities");
+            .GetPhysicalDeviceSurfaceCapabilities(_device.PhysicalDevice, _surface.Surface, &capabilities).Check("Get surface capabilities");
 
         uint numBuffers = _numBuffers;
         GraphiteLog.Log($"Requested image count: {numBuffers}");

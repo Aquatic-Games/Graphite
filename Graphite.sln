@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.VulkanMemoryAlloca
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.ShaderTools", "src\Graphite.ShaderTools\Graphite.ShaderTools.csproj", "{38E44346-2B92-475C-8DBE-C4A03F83F913}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.Vulkan", "src\Graphite.Vulkan\Graphite.Vulkan.csproj", "{733F2CC1-FEED-4E49-A9F3-FB9D2162EFD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +40,10 @@ Global
 		{38E44346-2B92-475C-8DBE-C4A03F83F913}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{38E44346-2B92-475C-8DBE-C4A03F83F913}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{38E44346-2B92-475C-8DBE-C4A03F83F913}.Release|Any CPU.Build.0 = Release|Any CPU
+		{733F2CC1-FEED-4E49-A9F3-FB9D2162EFD2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{733F2CC1-FEED-4E49-A9F3-FB9D2162EFD2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{733F2CC1-FEED-4E49-A9F3-FB9D2162EFD2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{733F2CC1-FEED-4E49-A9F3-FB9D2162EFD2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{7E5E2B62-B479-4BD2-A8E9-3974FE6A3C76} = {0802471C-F455-4B4B-A50C-93EB36406339}

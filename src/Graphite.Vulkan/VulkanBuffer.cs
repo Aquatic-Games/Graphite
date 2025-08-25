@@ -19,7 +19,7 @@ internal sealed unsafe class VulkanBuffer : Buffer
 
     public readonly bool IsMappable;
 
-    public VulkanBuffer(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly BufferInfo info, void* data) : base(info)
+    public VulkanBuffer(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly BufferInfo info, void* data) : base((BufferInfo) info)
     {
         _vk = vk;
         _device = device.Device;
