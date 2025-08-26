@@ -45,6 +45,9 @@ public abstract class CommandList : IDisposable
     /// <param name="colorAttachments">The color attachments that will be used in this render pass.</param>
     public abstract void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments);
 
+    public void BeginRenderPass(in ColorAttachmentInfo colorAttachment)
+        => BeginRenderPass([colorAttachment]);
+
     /// <summary>
     /// End the currently active render pass.
     /// </summary>
