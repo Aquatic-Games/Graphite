@@ -145,6 +145,20 @@ public abstract class Device : IDisposable
     /// execution.</remarks>
     public abstract void ExecuteCommandList(CommandList cl);
 
+    public abstract unsafe void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData);
+
+    public unsafe void UpdateBuffer<T>(Buffer buffer, uint offset, T data) where T : unmanaged
+        => UpdateBuffer(buffer, offset, (uint) sizeof(T), Unsafe.AsPointer(ref data));
+    
+    public unsafe void UpdateBuffer<T>(Buffer buffer, uint offset, in ReadOnlySpan<T> data) where T : unmanaged
+    {
+        fixed (void* pData = data)
+            UpdateBuffer(buffer, offset, (uint) (data.Length * sizeof(T)), pData);
+    }
+
+    public void UpdateBuffer<T>(Buffer buffer, uint offset, T[] data) where T : unmanaged
+        => UpdateBuffer<T>(buffer, offset, data.AsSpan());
+
     /// <summary>
     /// Map a <see cref="Buffer"/> into CPU-addressable memory so it can be written to/read from.
     /// </summary>

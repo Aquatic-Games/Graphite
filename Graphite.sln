@@ -6,7 +6,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.Core", "src\Graphi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0802471C-F455-4B4B-A50C-93EB36406339}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.Tests", "tests\Graphite.Tests\Graphite.Tests.csproj", "{7E5E2B62-B479-4BD2-A8E9-3974FE6A3C76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.SimpleTest", "tests\Graphite.SimpleTest\Graphite.SimpleTest.csproj", "{7E5E2B62-B479-4BD2-A8E9-3974FE6A3C76}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphite.VulkanMemoryAllocator", "src\Graphite.VulkanMemoryAllocator\Graphite.VulkanMemoryAllocator.csproj", "{22C1BA78-BCF7-422D-A1EC-E0BEFB729476}"
 EndProject

@@ -82,7 +82,12 @@ internal sealed unsafe class D3D11Device : Device
         D3D11CommandList d3dCommandList = (D3D11CommandList) cl;
         _context->ExecuteCommandList(d3dCommandList.CommandList, false);
     }
-    
+
+    public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    {
+        throw new NotImplementedException();
+    }
+
     public override nint MapBuffer(Buffer buffer)
     {
         D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;

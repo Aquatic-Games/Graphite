@@ -101,7 +101,7 @@ internal sealed unsafe class D3D11Instance : Instance
     
     static D3D11Instance()
     {
-        if (!OperatingSystem.IsWindows())
+        if (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") == "1")
             IsDXVK = true;
     }
 }

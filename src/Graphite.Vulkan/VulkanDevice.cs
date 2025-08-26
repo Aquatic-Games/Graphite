@@ -1,5 +1,6 @@
 global using VkDevice = Silk.NET.Vulkan.Device;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Core;
@@ -15,6 +16,8 @@ internal sealed unsafe class VulkanDevice : Device
     private readonly CommandPool _pool;
     private readonly CommandBuffer _singleTimeBuffer;
     private readonly Allocator* _allocator;
+
+    private readonly VulkanBuffer _stagingBuffer; 
     
     public readonly VkInstance Instance;
     
@@ -149,6 +152,17 @@ internal sealed unsafe class VulkanDevice : Device
         
         GraphiteLog.Log("Creating allocator.");
         Vma.CreateAllocator(&allocatorInfo, out _allocator).Check("Create allocator");
+        
+        // 64MiB staging buffer used in UpdateBuffer.
+        // TODO: Defer creation of this buffer so that it doesn't take extra space if user decides to handle everything
+        // manually? Or alternatively have some kind of setting. Hmm.
+        GraphiteLog.Log("Creating 64MiB staging buffer.");
+        BufferInfo bufferInfo = new()
+        {
+            Usage = BufferUsage.TransferBuffer,
+            SizeInBytes = 64 * 1024 * 1024
+        };
+        _stagingBuffer = new VulkanBuffer(_vk, this, _allocator, in bufferInfo, null);
     }
 
     public CommandBuffer BeginCommands()
@@ -236,6 +250,42 @@ internal sealed unsafe class VulkanDevice : Device
         // TODO: Obviously waiting for the queue to idle is not a good way of synchronization.
         // Use semaphores.
         _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
+    }
+
+    public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+
+        // If the buffer is already mappable, no need to copy with a transfer buffer.
+        if (vkBuffer.IsMappable)
+        {
+            void* mapBuffer;
+            Vma.MapMemory(_allocator, vkBuffer.Allocation, &mapBuffer).Check("Map buffer");
+            Unsafe.CopyBlock((byte*) mapBuffer + offset, pData, size);
+            Vma.UnmapMemory(_allocator, vkBuffer.Allocation);
+            return;
+        }
+        
+        if (size >= _stagingBuffer.Info.SizeInBytes)
+            throw new NotImplementedException();
+
+        void* mapStagingBuffer;
+        Vma.MapMemory(_allocator, _stagingBuffer.Allocation, &mapStagingBuffer).Check("Map staging buffer");
+        Unsafe.CopyBlock(mapStagingBuffer, pData, size);
+        Vma.UnmapMemory(_allocator, _stagingBuffer.Allocation);
+
+        CommandBuffer cb = BeginCommands();
+
+        BufferCopy copy = new()
+        {
+            SrcOffset = 0,
+            Size = size,
+            DstOffset = offset
+        };
+        
+        _vk.CmdCopyBuffer(cb, _stagingBuffer.Buffer, vkBuffer.Buffer, 1, &copy);
+        
+        EndCommands();
     }
 
     public override IntPtr MapBuffer(Buffer buffer)
