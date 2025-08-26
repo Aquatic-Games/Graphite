@@ -1,7 +1,9 @@
 global using VkFormat = Silk.NET.Vulkan.Format;
 global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
+using Graphite.Core;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
+using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
 
@@ -122,6 +124,26 @@ internal static class VulkanUtils
             DescriptorType.ConstantBuffer => VkDescriptorType.UniformBuffer,
             DescriptorType.Texture => VkDescriptorType.CombinedImageSampler,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    public static Silk.NET.Vulkan.Offset3D ToVk(this Offset3D offset)
+    {
+        return new Silk.NET.Vulkan.Offset3D
+        {
+            X = offset.X,
+            Y = offset.Y,
+            Z = offset.Z
+        };
+    }
+
+    public static Extent3D ToVk(this Size3D size)
+    {
+        return new Extent3D
+        {
+            Width = size.Width,
+            Height = size.Height,
+            Depth = size.Depth
         };
     }
 }

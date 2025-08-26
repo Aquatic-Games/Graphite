@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Graphite.Core;
 
 namespace Graphite;
 
@@ -114,11 +115,47 @@ public abstract class Device : IDisposable
         => CreateBuffer<T>(usage, data.AsSpan());
 
     /// <summary>
+    /// Create a <see cref="Texture"/> from the given info and optional data.
+    /// </summary>
+    /// <param name="info">The <see cref="TextureInfo"/> to use when creating the texture.</param>
+    /// <param name="pData">A pointer to the data to give to the texture, if any.</param>
+    /// <returns>The created <see cref="Texture"/>.</returns>
+    /// <remarks>The initial data provided will only be uploaded to Mip 0, Layer 0. Use <see cref="UpdateTexture"/> for
+    /// finer control.</remarks>
+    public abstract unsafe Texture CreateTexture(in TextureInfo info, void* pData);
+
+    /// <summary>
     /// Create a <see cref="Texture"/> from the given info.
     /// </summary>
     /// <param name="info">The <see cref="TextureInfo"/> to use when creating the texture.</param>
     /// <returns>The created <see cref="Texture"/>.</returns>
-    public abstract unsafe Texture CreateTexture(in TextureInfo info);
+    public unsafe Texture CreateTexture(in TextureInfo info)
+        => CreateTexture(in info, null);
+
+    /// <summary>
+    /// Create a <see cref="Texture"/> from the given info and optional data.
+    /// </summary>
+    /// <param name="info">The <see cref="TextureInfo"/> to use when creating the texture.</param>
+    /// <param name="data">The data to give to the texture.</param>
+    /// <returns>The created <see cref="Texture"/>.</returns>
+    /// <remarks>The initial data provided will only be uploaded to Mip 0, Layer 0. Use <see cref="UpdateTexture"/> for
+    /// finer control.</remarks>
+    public unsafe Texture CreateTexture<T>(in TextureInfo info, in ReadOnlySpan<T> data) where T : unmanaged
+    {
+        fixed (void* pData = data)
+            return CreateTexture(in info, pData);
+    }
+
+    /// <summary>
+    /// Create a <see cref="Texture"/> from the given info and optional data.
+    /// </summary>
+    /// <param name="info">The <see cref="TextureInfo"/> to use when creating the texture.</param>
+    /// <param name="data">The data to give to the texture.</param>
+    /// <returns>The created <see cref="Texture"/>.</returns>
+    /// <remarks>The initial data provided will only be uploaded to Mip 0, Layer 0. Use <see cref="UpdateTexture"/> for
+    /// finer control.</remarks>
+    public Texture CreateTexture<T>(in TextureInfo info, T[] data) where T : unmanaged
+        => CreateTexture<T>(in info, data.AsSpan());
 
     /// <summary>
     /// Create a <see cref="DescriptorLayout"/> with the given <see cref="DescriptorBinding"/>s.
@@ -158,6 +195,18 @@ public abstract class Device : IDisposable
 
     public void UpdateBuffer<T>(Buffer buffer, uint offset, T[] data) where T : unmanaged
         => UpdateBuffer<T>(buffer, offset, data.AsSpan());
+
+    public abstract unsafe void UpdateTexture(Texture texture, in Region3D region, void* pData);
+
+    public unsafe void UpdateTexture<T>(Texture texture, in Region3D region, in ReadOnlySpan<T> data)
+        where T : unmanaged
+    {
+        fixed (void* pData = data)
+            UpdateTexture(texture, in region, pData);
+    }
+
+    public void UpdateTexture<T>(Texture texture, in Region3D region, T[] data) where T : unmanaged
+        => UpdateTexture<T>(texture, in region, data.AsSpan());
 
     /// <summary>
     /// Map a <see cref="Buffer"/> into CPU-addressable memory so it can be written to/read from.

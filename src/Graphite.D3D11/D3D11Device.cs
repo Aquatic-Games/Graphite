@@ -62,7 +62,7 @@ internal sealed unsafe class D3D11Device : Device
         return new D3D11Buffer(_device, in info, data);
     }
 
-    public override Texture CreateTexture(in TextureInfo info)
+    public override Texture CreateTexture(in TextureInfo info, void* pData)
     {
         throw new NotImplementedException();
     }
@@ -84,6 +84,11 @@ internal sealed unsafe class D3D11Device : Device
     }
 
     public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void UpdateTexture(Texture texture, in Region3D region, void* pData)
     {
         throw new NotImplementedException();
     }
