@@ -108,6 +108,8 @@ Texture texture0 = device.CreateTexture(in textureInfo, result0.Data);
 textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
 Texture texture1 = device.CreateTexture(in textureInfo, result1.Data);
 
+Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);
+
 cl.Begin();
 cl.GenerateMipmaps(texture0);
 cl.GenerateMipmaps(texture1);
@@ -162,8 +164,8 @@ DescriptorLayout textureLayout = device.CreateDescriptorLayout(
     new DescriptorBinding(0, DescriptorType.Texture, ShaderStage.Pixel),
     new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel));
 DescriptorSet textureSet = device.CreateDescriptorSet(textureLayout,
-    new Descriptor(0, DescriptorType.Texture, texture: texture0),
-    new Descriptor(1, DescriptorType.Texture, texture: texture1));
+    new Descriptor(0, DescriptorType.Texture, texture: texture0, sampler: sampler),
+    new Descriptor(1, DescriptorType.Texture, texture: texture1, sampler: sampler));
 
 DescriptorLayout transformLayout =
     device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
@@ -234,6 +236,7 @@ transformSet.Dispose();
 transformLayout.Dispose();
 textureSet.Dispose();
 textureLayout.Dispose();
+sampler.Dispose();
 texture1.Dispose();
 texture0.Dispose();
 constantBuffer.Dispose();

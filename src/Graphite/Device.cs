@@ -174,6 +174,13 @@ public abstract class Device : IDisposable
         params ReadOnlySpan<Descriptor> descriptors);
 
     /// <summary>
+    /// Create a <see cref="Sampler"/>.
+    /// </summary>
+    /// <param name="info">The <see cref="SamplerInfo"/> to use when creating the sampler.</param>
+    /// <returns></returns>
+    public abstract Sampler CreateSampler(in SamplerInfo info);
+    
+    /// <summary>
     /// Execute a <see cref="CommandList"/>.
     /// </summary>
     /// <param name="cl">The <see cref="CommandList"/> to execute.</param>

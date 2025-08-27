@@ -33,6 +33,6 @@ VSOutput VSMain(const in VSInput input)
 
 float4 PSMain(const in VSOutput input): SV_Target0
 {
-    return lerp(Texture0.Sample(Sampler0, input.TexCoord), Texture1.Sample(Sampler1, input.TexCoord), 0.8);
+    return lerp(Texture0.Sample(Sampler0, input.TexCoord), Texture1.Sample(Sampler1, input.TexCoord), 0.5);
     //return float4(input.TexCoord, 0.0, 1.0);
 }

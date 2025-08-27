@@ -1,5 +1,6 @@
 global using VkFormat = Silk.NET.Vulkan.Format;
 global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
+global using VkFilter = Silk.NET.Vulkan.Filter;
 using Graphite.Core;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
@@ -124,6 +125,38 @@ internal static class VulkanUtils
             DescriptorType.ConstantBuffer => VkDescriptorType.UniformBuffer,
             DescriptorType.Texture => VkDescriptorType.CombinedImageSampler,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    public static VkFilter ToVkFilter(this Filter filter)
+    {
+        return filter switch
+        {
+            Filter.Point => VkFilter.Nearest,
+            Filter.Linear => VkFilter.Linear,
+            _ => throw new ArgumentOutOfRangeException(nameof(filter), filter, null)
+        };
+    }
+
+    public static SamplerMipmapMode ToVkMipmapMode(this Filter filter)
+    {
+        return filter switch
+        {
+            Filter.Point => SamplerMipmapMode.Nearest,
+            Filter.Linear => SamplerMipmapMode.Linear,
+            _ => throw new ArgumentOutOfRangeException(nameof(filter), filter, null)
+        };
+    }
+
+    public static SamplerAddressMode ToVk(this AddressMode mode)
+    {
+        return mode switch
+        {
+            AddressMode.Wrap => SamplerAddressMode.Repeat,
+            AddressMode.Mirror => SamplerAddressMode.MirroredRepeat,
+            AddressMode.ClampToEdge => SamplerAddressMode.ClampToEdge,
+            AddressMode.ClampToBorder => SamplerAddressMode.ClampToBorder,
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
     }
 

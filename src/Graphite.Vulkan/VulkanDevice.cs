@@ -234,6 +234,11 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanDescriptorSet(_vk, Device, layout, descriptors);
     }
 
+    public override Sampler CreateSampler(in SamplerInfo info)
+    {
+        return new VulkanSampler(_vk, Device, in info);
+    }
+
     public override void ExecuteCommandList(CommandList cl)
     {
         VulkanCommandList vulkanCl = (VulkanCommandList) cl;

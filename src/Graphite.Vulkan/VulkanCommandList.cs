@@ -144,7 +144,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
                 baseMipLevel: i);
 
             _vk.CmdBlitImage(Buffer, vkTexture.Image, ImageLayout.TransferSrcOptimal, vkTexture.Image,
-                ImageLayout.TransferDstOptimal, 1, &blit, Filter.Linear);
+                ImageLayout.TransferDstOptimal, 1, &blit, VkFilter.Linear);
 
             vkTexture.Transition(Buffer, ImageLayout.TransferDstOptimal, ImageLayout.TransferSrcOptimal,
                 AccessFlags.TransferWriteBit, AccessFlags.TransferReadBit, PipelineStageFlags.TransferBit,

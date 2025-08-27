@@ -76,7 +76,12 @@ internal sealed unsafe class D3D11Device : Device
     {
         return new D3D11DescriptorSet(layout, descriptors);
     }
-    
+
+    public override Sampler CreateSampler(in SamplerInfo info)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void ExecuteCommandList(CommandList cl)
     {
         D3D11CommandList d3dCommandList = (D3D11CommandList) cl;
