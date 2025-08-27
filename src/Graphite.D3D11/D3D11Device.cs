@@ -67,9 +67,9 @@ internal sealed unsafe class D3D11Device : Device
         return new D3D11Texture(_device, _context, in info, pData);
     }
 
-    public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
+    public override DescriptorLayout CreateDescriptorLayout(in DescriptorLayoutInfo info)
     {
-        return new D3D11DescriptorLayout(bindings);
+        return new D3D11DescriptorLayout(in info);
     }
     
     public override DescriptorSet CreateDescriptorSet(DescriptorLayout layout, params ReadOnlySpan<Descriptor> descriptors)

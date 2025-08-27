@@ -1,5 +1,6 @@
 using Graphite.Core;
 using Silk.NET.Vulkan;
+using Silk.NET.Vulkan.Extensions.KHR;
 using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
@@ -10,11 +11,13 @@ internal sealed unsafe class VulkanCommandList : CommandList
     private readonly VkDevice _device;
     private readonly CommandPool _pool;
 
+    private readonly KhrPushDescriptor? _pushDescriptor;
+
     private VulkanTexture? _swapchainTexture;
     
     public readonly CommandBuffer Buffer;
 
-    public VulkanCommandList(Vk vk, VkDevice device, CommandPool pool)
+    public VulkanCommandList(Vk vk, VkInstance instance, VkDevice device, CommandPool pool)
     {
         _vk = vk;
         _device = device;
@@ -30,6 +33,8 @@ internal sealed unsafe class VulkanCommandList : CommandList
         
         GraphiteLog.Log("Allocating command buffer.");
         _vk.AllocateCommandBuffers(_device, &allocInfo, out Buffer).Check("Allocate command buffer");
+
+        _vk.TryGetDeviceExtension(instance, device, out _pushDescriptor);
     }
 
     public override void Begin()
@@ -255,6 +260,21 @@ internal sealed unsafe class VulkanCommandList : CommandList
         };
         
         _vk.CmdBindIndexBuffer(Buffer, vkBuffer.Buffer, offset, type);
+    }
+
+    public override void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors)
+    {
+        VulkanPipeline vkPipeline = (VulkanPipeline) pipeline;
+
+        DescriptorBufferInfo* bufferInfos = stackalloc DescriptorBufferInfo[descriptors.Length];
+        DescriptorImageInfo* imageInfos = stackalloc DescriptorImageInfo[descriptors.Length];
+        WriteDescriptorSet* writeSets = stackalloc WriteDescriptorSet[descriptors.Length];
+
+        VulkanDescriptorSet.PopulateWriteDescriptorSets(in descriptors, new VkDescriptorSet(), writeSets, bufferInfos,
+            imageInfos);
+
+        _pushDescriptor!.CmdPushDescriptorSet(Buffer, PipelineBindPoint.Graphics, vkPipeline.Layout, slot,
+            (uint) descriptors.Length, writeSets);
     }
 
     public override void Draw(uint numVertices, uint firstVertex = 0)

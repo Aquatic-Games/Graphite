@@ -5,12 +5,15 @@ namespace Graphite.D3D11;
 internal sealed class D3D11DescriptorLayout : DescriptorLayout
 {
     public readonly Dictionary<uint, DescriptorBinding> Layout;
-    
-    public D3D11DescriptorLayout(ReadOnlySpan<DescriptorBinding> bindings)
-    {
-        Layout = new Dictionary<uint, DescriptorBinding>(bindings.Length);
 
-        foreach (DescriptorBinding binding in bindings)
+    public readonly bool IsPushDescriptor;
+    
+    public D3D11DescriptorLayout(in DescriptorLayoutInfo info)
+    {
+        Layout = new Dictionary<uint, DescriptorBinding>(info.Bindings.Length);
+        IsPushDescriptor = info.PushDescriptor;
+
+        foreach (DescriptorBinding binding in info.Bindings)
         {
             Layout.Add(binding.Binding, binding);
         }

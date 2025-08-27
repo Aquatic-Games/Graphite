@@ -233,7 +233,12 @@ internal sealed unsafe class D3D11CommandList : CommandList
         D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;
         _context->IASetIndexBuffer(d3dBuffer.Buffer, format.ToD3D(), offset);
     }
-    
+
+    public override void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors)
+    {
+        throw new NotImplementedException();
+    }
+
     public override void Draw(uint numVertices, uint firstVertex = 0)
     {
         _context->Draw(numVertices, firstVertex);

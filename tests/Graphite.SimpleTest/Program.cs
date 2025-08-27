@@ -21,8 +21,8 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
-Instance.RegisterBackend<D3D11Backend>();
-//Instance.RegisterBackend<VulkanBackend>();
+//Instance.RegisterBackend<D3D11Backend>();
+Instance.RegisterBackend<VulkanBackend>();
 
 Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));
 Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
@@ -95,7 +95,7 @@ TextureInfo textureInfo = new()
     Type = TextureType.Texture2D,
     Format = Format.R8G8B8A8_UNorm,
     Size = new Size3D((uint) result0.Width, (uint) result0.Height),
-    Usage = TextureUsage.ShaderResource,
+    Usage = TextureUsage.ShaderResource | TextureUsage.GenerateMips,
     ArraySize = 1
 };
 
@@ -161,17 +161,23 @@ string shader = File.ReadAllText("Shader.hlsl");
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
-DescriptorLayout textureLayout = device.CreateDescriptorLayout(
-    new DescriptorBinding(0, DescriptorType.Texture, ShaderStage.Pixel),
-    new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel));
+DescriptorLayout textureLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
+{
+    Bindings =
+    [
+        new DescriptorBinding(0, DescriptorType.Texture, ShaderStage.Pixel),
+        new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel)
+    ]
+});
 DescriptorSet textureSet = device.CreateDescriptorSet(textureLayout,
     new Descriptor(0, DescriptorType.Texture, texture: texture0, sampler: sampler),
     new Descriptor(1, DescriptorType.Texture, texture: texture1, sampler: sampler));
 
-DescriptorLayout transformLayout =
-    device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
-DescriptorSet transformSet =
-    device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
+DescriptorLayout transformLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
+{
+    Bindings = [new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex)],
+    PushDescriptor = true
+});
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -219,7 +225,7 @@ while (alive)
     
     cl.SetGraphicsPipeline(pipeline);
     cl.SetDescriptorSet(0, pipeline, textureSet);
-    cl.SetDescriptorSet(1, pipeline, transformSet);
+    cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
@@ -233,7 +239,6 @@ while (alive)
 }
 
 pipeline.Dispose();
-transformSet.Dispose();
 transformLayout.Dispose();
 textureSet.Dispose();
 textureLayout.Dispose();

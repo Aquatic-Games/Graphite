@@ -35,6 +35,10 @@ public abstract class CommandList : IDisposable
     /// <remarks>This is a transfer operation, and cannot occur inside a render pass.</remarks>
     public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Region3D? region = null);
 
+    /// <summary>
+    /// Generate mipmaps for the given <see cref="Texture"/>.
+    /// </summary>
+    /// <param name="texture">The <see cref="Texture"/> to generate mipmaps for.</param>
     public abstract void GenerateMipmaps(Texture texture);
 
     /// <summary>
@@ -81,6 +85,8 @@ public abstract class CommandList : IDisposable
     /// <param name="format">The <see cref="Format"/> of the buffer. Valid values are: <see cref="Format.R16_UInt"/> and <see cref="Format.R32_UInt"/>.</param>
     /// <param name="offset">The offset, in bytes, into the buffer.</param>
     public abstract void SetIndexBuffer(Buffer buffer, Format format, uint offset = 0);
+
+    public abstract void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors);
     
     /// <summary>
     /// Draw primitives.

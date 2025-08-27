@@ -81,7 +81,8 @@ internal sealed unsafe class VulkanDevice : Device
             };
         }
 
-        using Utf8StringArray pExtensions = new Utf8StringArray(KhrSwapchain.ExtensionName);
+        using Utf8StringArray pExtensions =
+            new Utf8StringArray(KhrSwapchain.ExtensionName, KhrPushDescriptor.ExtensionName);
 
         PhysicalDeviceFeatures deviceFeatures = new();
 
@@ -200,7 +201,7 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override CommandList CreateCommandList()
     {
-        return new VulkanCommandList(_vk, Device, _pool);
+        return new VulkanCommandList(_vk, Instance, Device, _pool);
     }
 
     public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
@@ -224,9 +225,9 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanTexture(_vk, this, _allocator, in info, pData);
     }
 
-    public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
+    public override DescriptorLayout CreateDescriptorLayout(in DescriptorLayoutInfo info)
     {
-        return new VulkanDescriptorLayout(_vk, Device, bindings);
+        return new VulkanDescriptorLayout(_vk, Device, in info);
     }
 
     public override DescriptorSet CreateDescriptorSet(DescriptorLayout layout, params ReadOnlySpan<Descriptor> descriptors)

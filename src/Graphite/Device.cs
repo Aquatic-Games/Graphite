@@ -160,9 +160,9 @@ public abstract class Device : IDisposable
     /// <summary>
     /// Create a <see cref="DescriptorLayout"/> with the given <see cref="DescriptorBinding"/>s.
     /// </summary>
-    /// <param name="bindings">The <see cref="DescriptorBinding"/>s that this layout will contain.</param>
+    /// <param name="info">The <see cref="DescriptorLayoutInfo"/> to use when creating the layout.</param>
     /// <returns>The created <see cref="DescriptorLayout"/>.</returns>
-    public abstract DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings);
+    public abstract DescriptorLayout CreateDescriptorLayout(in DescriptorLayoutInfo info);
 
     /// <summary>
     /// Create a <see cref="DescriptorSet"/> for the given <see cref="DescriptorLayout"/>.

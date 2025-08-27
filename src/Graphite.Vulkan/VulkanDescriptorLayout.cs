@@ -11,11 +11,13 @@ internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
     public readonly Dictionary<VkDescriptorType, uint> DescriptorCounts;
     public readonly DescriptorSetLayout Layout;
     
-    public VulkanDescriptorLayout(Vk vk, VkDevice device, ReadOnlySpan<DescriptorBinding> bindings)
+    public VulkanDescriptorLayout(Vk vk, VkDevice device, ref readonly DescriptorLayoutInfo info)
     {
         _vk = vk;
         _device = device;
         DescriptorCounts = [];
+
+        ref readonly ReadOnlySpan<DescriptorBinding> bindings = ref info.Bindings;
 
         DescriptorSetLayoutBinding* vkBindings = stackalloc DescriptorSetLayoutBinding[bindings.Length];
         for (int i = 0; i < bindings.Length; i++)
@@ -48,6 +50,7 @@ internal sealed unsafe class VulkanDescriptorLayout : DescriptorLayout
         DescriptorSetLayoutCreateInfo layoutInfo = new()
         {
             SType = StructureType.DescriptorSetLayoutCreateInfo,
+            Flags = info.PushDescriptor ? DescriptorSetLayoutCreateFlags.PushDescriptorBitKhr : 0,
             BindingCount = (uint) bindings.Length,
             PBindings = vkBindings
         };
