@@ -129,52 +129,66 @@ internal sealed unsafe class D3D11CommandList : CommandList
             ShaderStage stages = d3dSet.Layout.Layout[descriptor.Binding].Stages;
             DescriptorType type = d3dSet.Layout.Layout[descriptor.Binding].Type;
 
-            if ((stages & ShaderStage.Vertex) != 0)
+            switch (type)
             {
-                Debug.Assert(d3dPipeline.VertexDescriptors != null);
-                uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
-
-                switch (type)
+                case DescriptorType.ConstantBuffer:
                 {
-                    case DescriptorType.ConstantBuffer:
+                    Debug.Assert(descriptor.Buffer != null);
+                    D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                    uint offset = descriptor.BufferOffset;
+                    uint range = descriptor.BufferRange == uint.MaxValue
+                        ? buffer.Info.SizeInBytes : descriptor.BufferRange;
+                    ID3D11Buffer* buf = buffer.Buffer;
+
+                    if ((stages & ShaderStage.Vertex) != 0)
                     {
-                        Debug.Assert(descriptor.Buffer != null);
-                        D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
-                        uint offset = descriptor.BufferOffset;
-                        uint range = descriptor.BufferRange == uint.MaxValue
-                            ? buffer.Info.SizeInBytes : descriptor.BufferRange;
-                        ID3D11Buffer* buf = buffer.Buffer;
+                        Debug.Assert(d3dPipeline.VertexDescriptors != null);
+                        uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
                         _context->VSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
-                        
-                        break;
                     }
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
 
-            if ((stages & ShaderStage.Pixel) != 0)
-            {
-                Debug.Assert(d3dPipeline.PixelDescriptors != null);
-                uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
-                
-                switch (type)
-                {
-                    case DescriptorType.ConstantBuffer:
+                    if ((stages & ShaderStage.Pixel) != 0)
                     {
-                        Debug.Assert(descriptor.Buffer != null);
-                        D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
-                        uint offset = descriptor.BufferOffset;
-                        uint range = descriptor.BufferRange == uint.MaxValue
-                            ? buffer.Info.SizeInBytes : descriptor.BufferRange;
-                        ID3D11Buffer* buf = buffer.Buffer;
+                        Debug.Assert(d3dPipeline.PixelDescriptors != null);
+                        uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
                         _context->PSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
-                        
-                        break;
                     }
-                    default:
-                        throw new ArgumentOutOfRangeException();
+
+                    break;
                 }
+                
+                case DescriptorType.Texture:
+                {
+                    Debug.Assert(descriptor.Texture != null);
+                    Debug.Assert(descriptor.Sampler != null);
+
+                    D3D11Texture texture = (D3D11Texture) descriptor.Texture;
+                    D3D11Sampler sampler = (D3D11Sampler) descriptor.Sampler;
+
+                    ID3D11ShaderResourceView* srv = texture.ResourceView;
+                    ID3D11SamplerState* ss = sampler.Sampler;
+                    
+                    if ((stages & ShaderStage.Vertex) != 0)
+                    {
+                        Debug.Assert(d3dPipeline.VertexDescriptors != null);
+                        uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
+                        _context->VSSetShaderResources(remappedSlot, 1, &srv);
+                        _context->VSSetSamplers(remappedSlot, 1, &ss);
+                    }
+
+                    if ((stages & ShaderStage.Pixel) != 0)
+                    {
+                        Debug.Assert(d3dPipeline.PixelDescriptors != null);
+                        uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
+                        _context->PSSetShaderResources(remappedSlot, 1, &srv);
+                        _context->PSSetSamplers(remappedSlot, 1, &ss);
+                    }
+                    
+                    break;
+                }
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
     }
