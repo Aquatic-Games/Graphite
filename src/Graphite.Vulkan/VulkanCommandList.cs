@@ -235,7 +235,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
         VulkanPipeline vkPipeline = (VulkanPipeline) pipeline;
         VulkanDescriptorSet vkSet = (VulkanDescriptorSet) set;
         VkDescriptorSet s = vkSet.Set;
-        _vk.CmdBindDescriptorSets(Buffer, PipelineBindPoint.Graphics, vkPipeline.Layout, slot, 1, &s, 0, null);
+        _vk.CmdBindDescriptorSets(Buffer, vkPipeline.BindPoint, vkPipeline.Layout, slot, 1, &s, 0, null);
     }
 
     public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
@@ -273,7 +273,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
         VulkanDescriptorSet.PopulateWriteDescriptorSets(in descriptors, new VkDescriptorSet(), writeSets, bufferInfos,
             imageInfos);
 
-        _pushDescriptor!.CmdPushDescriptorSet(Buffer, PipelineBindPoint.Graphics, vkPipeline.Layout, slot,
+        _pushDescriptor!.CmdPushDescriptorSet(Buffer, vkPipeline.BindPoint, vkPipeline.Layout, slot,
             (uint) descriptors.Length, writeSets);
     }
 

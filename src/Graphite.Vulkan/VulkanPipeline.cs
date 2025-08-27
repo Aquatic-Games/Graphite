@@ -11,11 +11,14 @@ internal sealed unsafe class VulkanPipeline : Pipeline
 
     public readonly PipelineLayout Layout;
     public readonly VkPipeline Pipeline;
+
+    public readonly PipelineBindPoint BindPoint;
     
     public VulkanPipeline(Vk vk, VkDevice device, ref readonly GraphicsPipelineInfo info)
     {
         _vk = vk;
         _device = device;
+        BindPoint = PipelineBindPoint.Graphics;
 
         DescriptorSetLayout* descriptorLayouts = stackalloc DescriptorSetLayout[info.Descriptors.Length];
         for (int i = 0; i < info.Descriptors.Length; i++)
