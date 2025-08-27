@@ -53,10 +53,38 @@ internal sealed unsafe class D3D11CommandList : CommandList
             (ID3D11Resource*) d3dSrc.Buffer, 0, &copyBox);
     }
 
-    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size,
-        Offset3D offset = default)
+    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Region3D? region = null)
     {
-        throw new NotImplementedException();
+        /*D3D11Buffer d3dSrc = (D3D11Buffer) src;
+        D3D11Texture d3dDest = (D3D11Texture) dest;
+
+        uint x = 0;
+        uint y = 0;
+        uint z = 0;
+
+        uint rowPitch = d3dDest.Info.Format.Bpp() / 8;
+
+        if (region is { } reg)
+        {
+            x = (uint) reg.X;
+            y = (uint) reg.Y;
+            z = (uint) reg.Z;
+            rowPitch *= reg.Width;
+        }
+        else
+            rowPitch *= d3dDest.Info.Size.Width;
+
+        D3D11_BOX box = new D3D11_BOX((int) srcOffset, 0, 0, (int) (srcOffset + rowPitch), 1, 1);
+
+        _context->CopySubresourceRegion((ID3D11Resource*) d3dDest.Texture, 0, x, y, z, (ID3D11Resource*) d3dSrc.Buffer,
+            0, &box);*/
+
+        // TODO: This doesn't work in D3D11. Perhaps staging textures should be implemented but I'm not a big fan of
+        // that idea. Right now I don't really know the best way to implement this, but I don't want to remove this
+        // functionality either.
+        
+        throw new NotImplementedException(
+            "Copying between a buffer and texture is not supported in D3D11, and there is not yet a workaround in the D3D11 backend to make this work.");
     }
 
     public override void GenerateMipmaps(Texture texture)

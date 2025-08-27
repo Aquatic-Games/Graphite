@@ -66,20 +66,30 @@ internal sealed unsafe class VulkanCommandList : CommandList
         _vk.CmdCopyBuffer(Buffer, vkSrc.Buffer, vkDest.Buffer, 1, &copy);
     }
 
-    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
-        Offset3D offset = default)
+    public override void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Region3D? region = null)
     {
         VulkanBuffer vkSrc = (VulkanBuffer) src;
         VulkanTexture vkDest = (VulkanTexture) dest;
 
-        if (size == default)
-            size = vkDest.Info.Size;
+        Silk.NET.Vulkan.Offset3D offset;
+        Extent3D extent;
+
+        if (region is { } reg)
+        {
+            offset = reg.Offset.ToVk();
+            extent = reg.Size.ToVk();
+        }
+        else
+        {
+            offset = new Silk.NET.Vulkan.Offset3D();
+            extent = vkDest.Info.Size.ToVk();
+        }
 
         BufferImageCopy copy = new()
         {
             BufferOffset = srcOffset,
-            ImageExtent = new Extent3D(size.Width, size.Height, size.Depth),
-            ImageOffset = new Silk.NET.Vulkan.Offset3D(offset.X, offset.Y, offset.Z),
+            ImageExtent = extent,
+            ImageOffset = offset,
             // TODO: Mip level, array layer
             ImageSubresource = new ImageSubresourceLayers
             {

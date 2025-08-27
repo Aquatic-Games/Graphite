@@ -31,11 +31,9 @@ public abstract class CommandList : IDisposable
     /// <param name="src">The source <see cref="Buffer"/>.</param>
     /// <param name="srcOffset">The offset into the source buffer, in bytes.</param>
     /// <param name="dest">The destination <see cref="Texture"/>.</param>
-    /// <param name="size">The size of the texture region to copy. If 0, the entire texture region will be copied.</param>
-    /// <param name="offset">The offset of the texture region to copy.</param>
+    /// <param name="region">The texture region to copy to. If null, the full texture region will be used.</param>
     /// <remarks>This is a transfer operation, and cannot occur inside a render pass.</remarks>
-    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
-        Offset3D offset = default);
+    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Region3D? region = null);
 
     public abstract void GenerateMipmaps(Texture texture);
 

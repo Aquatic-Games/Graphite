@@ -90,25 +90,24 @@ ReadOnlySpan<ushort> indices =
 ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
 ImageResult result1 = ImageResult.FromMemory(File.ReadAllBytes("Bagel.png"), ColorComponents.RedGreenBlueAlpha);
 
-Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
-Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
-Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
-
 TextureInfo textureInfo = new()
 {
     Type = TextureType.Texture2D,
     Format = Format.R8G8B8A8_UNorm,
     Size = new Size3D((uint) result0.Width, (uint) result0.Height),
-    Usage = TextureUsage.ShaderResource | TextureUsage.GenerateMips,
+    Usage = TextureUsage.ShaderResource,
     ArraySize = 1
 };
 
 Texture texture0 = device.CreateTexture(in textureInfo, result0.Data);
+Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);
+
+Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
+Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
+Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
 
 textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
 Texture texture1 = device.CreateTexture(in textureInfo, result1.Data);
-
-Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);
 
 cl.Begin();
 cl.GenerateMipmaps(texture0);
@@ -119,13 +118,14 @@ device.ExecuteCommandList(cl);
 /*uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
 uint cBufferSize = 64;
-uint textureSize = (uint) (result.Width * result.Height * 4); // 32bpp
+uint textureSize = (uint) (result1.Width * result1.Height * 4); // 32bpp
 
 Buffer vertexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.VertexBuffer, vertexSize));
 Buffer indexBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.IndexBuffer, indexSize));
 Buffer constantBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, cBufferSize));
-Texture texture = device.CreateTexture(TextureInfo.Texture2D(Format.R8G8B8A8_UNorm,
-    new Size2D((uint) result.Width, (uint) result.Height), 0, TextureUsage.ShaderResource | TextureUsage.GenerateMips));
+
+textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
+Texture texture1 = device.CreateTexture(in textureInfo);
 
 Buffer transferBuffer = device.CreateBuffer(new BufferInfo(BufferUsage.TransferBuffer, vertexSize + indexSize + cBufferSize + textureSize));
 nint mappedBuffer = device.MapBuffer(transferBuffer);
@@ -139,7 +139,7 @@ unsafe
     Matrix4x4 identity = Matrix4x4.Identity;
     Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize, Unsafe.AsPointer(ref identity), cBufferSize);
 
-    fixed (byte* pData = result.Data)
+    fixed (byte* pData = result1.Data)
         Unsafe.CopyBlock((byte*) mappedBuffer + vertexSize + indexSize + cBufferSize, pData, textureSize);
 }
 device.UnmapBuffer(transferBuffer);
@@ -148,8 +148,9 @@ cl.Begin();
 cl.CopyBufferToBuffer(transferBuffer, 0, vertexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize, indexBuffer, 0);
 cl.CopyBufferToBuffer(transferBuffer, vertexSize + indexSize, constantBuffer, 0);
-cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture);
-cl.GenerateMipmaps(texture);
+cl.CopyBufferToTexture(transferBuffer, vertexSize + indexSize + cBufferSize, texture1);
+cl.GenerateMipmaps(texture0);
+cl.GenerateMipmaps(texture1);
 cl.End();
 device.ExecuteCommandList(cl);
 

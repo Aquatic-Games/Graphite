@@ -90,12 +90,18 @@ internal sealed unsafe class D3D11Device : Device
 
     public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
     {
-        throw new NotImplementedException();
+        D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;
+        D3D11_BOX box = new D3D11_BOX((int) offset, 0, 0, (int) (offset + size), 1, 1);
+        _context->UpdateSubresource((ID3D11Resource*) d3dBuffer.Buffer, 0, &box, pData, 0, 0);
     }
 
     public override void UpdateTexture(Texture texture, in Region3D region, void* pData)
     {
-        throw new NotImplementedException();
+        D3D11Texture d3dTexture = (D3D11Texture) texture;
+        D3D11_BOX box = new D3D11_BOX(region.X, region.Y, region.Z, region.X + (int) region.Width,
+            region.Y + (int) region.Height, region.Z + (int) region.Depth);
+        _context->UpdateSubresource((ID3D11Resource*) d3dTexture.Texture, 0, &box, pData,
+            region.Width * texture.Info.Format.Bpp() / 8, 0);
     }
 
     public override nint MapBuffer(Buffer buffer)
