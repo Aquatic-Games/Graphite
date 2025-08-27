@@ -87,7 +87,8 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-ImageResult result = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
+ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
+ImageResult result1 = ImageResult.FromMemory(File.ReadAllBytes("Bagel.png"), ColorComponents.RedGreenBlueAlpha);
 
 Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
@@ -97,15 +98,19 @@ TextureInfo textureInfo = new()
 {
     Type = TextureType.Texture2D,
     Format = Format.R8G8B8A8_UNorm,
-    Size = new Size3D((uint) result.Width, (uint) result.Height),
+    Size = new Size3D((uint) result0.Width, (uint) result0.Height),
     Usage = TextureUsage.ShaderResource | TextureUsage.GenerateMips,
     ArraySize = 1
 };
 
-Texture texture = device.CreateTexture(in textureInfo, result.Data);
+Texture texture0 = device.CreateTexture(in textureInfo, result0.Data);
+
+textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
+Texture texture1 = device.CreateTexture(in textureInfo, result1.Data);
 
 cl.Begin();
-cl.GenerateMipmaps(texture);
+cl.GenerateMipmaps(texture0);
+cl.GenerateMipmaps(texture1);
 cl.End();
 device.ExecuteCommandList(cl);
 
@@ -153,13 +158,17 @@ string shader = File.ReadAllText("Shader.hlsl");
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
+DescriptorLayout textureLayout = device.CreateDescriptorLayout(
+    new DescriptorBinding(0, DescriptorType.Texture, ShaderStage.Pixel),
+    new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel));
+DescriptorSet textureSet = device.CreateDescriptorSet(textureLayout,
+    new Descriptor(0, DescriptorType.Texture, texture: texture0),
+    new Descriptor(1, DescriptorType.Texture, texture: texture1));
+
 DescriptorLayout transformLayout =
-    device.CreateDescriptorLayout(
-        new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex),
-        new DescriptorBinding(1, DescriptorType.Texture, ShaderStage.Pixel));
-DescriptorSet transformSet = device.CreateDescriptorSet(transformLayout,
-    new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer),
-    new Descriptor(1, DescriptorType.Texture, texture: texture));
+    device.CreateDescriptorLayout(new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex));
+DescriptorSet transformSet =
+    device.CreateDescriptorSet(transformLayout, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -171,7 +180,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
-    Descriptors = [transformLayout]
+    Descriptors = [textureLayout, transformLayout]
 });
 
 pixelShader.Dispose();
@@ -206,7 +215,8 @@ while (alive)
     cl.BeginRenderPass([new ColorAttachmentInfo(swapchainTexture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
-    cl.SetDescriptorSet(0, pipeline, transformSet);
+    cl.SetDescriptorSet(0, pipeline, textureSet);
+    cl.SetDescriptorSet(1, pipeline, transformSet);
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     cl.DrawIndexed(6);
@@ -222,7 +232,10 @@ while (alive)
 pipeline.Dispose();
 transformSet.Dispose();
 transformLayout.Dispose();
-texture.Dispose();
+textureSet.Dispose();
+textureLayout.Dispose();
+texture1.Dispose();
+texture0.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();
