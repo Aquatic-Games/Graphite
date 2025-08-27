@@ -64,7 +64,7 @@ internal sealed unsafe class D3D11Device : Device
 
     public override Texture CreateTexture(in TextureInfo info, void* pData)
     {
-        throw new NotImplementedException();
+        return new D3D11Texture(_device, _context, in info, pData);
     }
 
     public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
