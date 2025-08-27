@@ -61,7 +61,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
 
     public override void GenerateMipmaps(Texture texture)
     {
-        throw new NotImplementedException();
+        D3D11Texture d3dTexture = (D3D11Texture) texture;
+        _context->GenerateMips(d3dTexture.ResourceView);
     }
 
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)

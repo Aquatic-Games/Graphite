@@ -79,7 +79,7 @@ internal sealed unsafe class D3D11Device : Device
 
     public override Sampler CreateSampler(in SamplerInfo info)
     {
-        throw new NotImplementedException();
+        return new D3D11Sampler(_device, in info);
     }
 
     public override void ExecuteCommandList(CommandList cl)
