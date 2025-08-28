@@ -70,16 +70,20 @@ public abstract class Instance : IDisposable
 
         foreach ((string name, IBackendBase backend) in _backends)
         {
+            GraphiteLog.Log(GraphiteLog.Severity.Error, GraphiteLog.Type.General, $"Creating backend: {name}.");
+            Instance instance;
+            
             try
             {
-                GraphiteLog.Log(GraphiteLog.Severity.Info, GraphiteLog.Type.General, $"Creating backend: {name}.");
-                Instance instance = backend.CreateInstance(in info);
-                return instance;
+                instance = backend.CreateInstance(in info);
             }
             catch (Exception e)
             {
-                GraphiteLog.Log(GraphiteLog.Severity.Error, GraphiteLog.Type.Other, $"Failed to create backend: {e}");
+                GraphiteLog.Log(GraphiteLog.Severity.Warning, GraphiteLog.Type.Other, $"Failed to create backend: {e}");
+                continue;
             }
+            
+            return instance;
         }
 
         throw new PlatformNotSupportedException("None of the registered backends are supported on this system.");

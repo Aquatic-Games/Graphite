@@ -7,6 +7,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <RootNamespace>Graphite.Tests</RootNamespace>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>

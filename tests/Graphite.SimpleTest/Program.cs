@@ -12,16 +12,13 @@ using Buffer = Graphite.Buffer;
 
 GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 {
-    if (severity == GraphiteLog.Severity.Error)
-        throw new Exception(message);
-
     Console.WriteLine($"{severity} - {type}: {message}");
 };
 
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
-//Instance.RegisterBackend<D3D11Backend>();
+Instance.RegisterBackend<D3D11Backend>();
 Instance.RegisterBackend<VulkanBackend>();
 
 Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));

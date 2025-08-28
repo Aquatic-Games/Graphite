@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Graphite.Core;
 using Silk.NET.SPIRV;
 using Silk.NET.SPIRV.Cross;
@@ -25,6 +27,18 @@ public static unsafe class Compiler
     static Compiler()
     {
         _spirv = Cross.GetApi();
+        ResolveLibrary += OnResolveLibrary;
+    }
+
+    private static IntPtr OnResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        string newLibName = libraryName switch
+        {
+            "d3dcompiler47" => "libvkd3d-utils",
+            _ => libraryName
+        };
+
+        return NativeLibrary.Load(newLibName, assembly, searchPath);
     }
 
     /// <summary>

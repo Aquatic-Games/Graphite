@@ -22,7 +22,12 @@ internal sealed unsafe class D3D11Instance : Instance
     {
         if (IsDXVK)
             ResolveLibrary += OnResolveLibrary;
-        
+        else if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "D3D11 is not supprted on non-Windows platforms unless the GRAPHITE_USE_DXVK environment variable is set.");
+        }
+
         _debug = info.Debug;
         
         GraphiteLog.Log("Creating DXGI factory.");
@@ -91,6 +96,7 @@ internal sealed unsafe class D3D11Instance : Instance
         {
             "d3d11" => "libdxvk_d3d11",
             "dxgi" => "libdxvk_dxgi",
+            "d3dcompiler_47" => "libvkd3d-utils",
             _ => libraryName
         };
 
