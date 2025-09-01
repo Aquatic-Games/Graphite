@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
@@ -91,6 +93,17 @@ internal sealed unsafe class D3D11Device : Device
     public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
     {
         D3D11Buffer d3dBuffer = (D3D11Buffer) buffer;
+
+        if (d3dBuffer.MapType != 0)
+        {
+            Debug.Assert(offset == 0, "D3D11 backend does not support the offset at anything other than 0 for mappable buffers.");
+            
+            D3D11_MAPPED_SUBRESOURCE mapped;
+            _context->Map((ID3D11Resource*) d3dBuffer.Buffer, 0, d3dBuffer.MapType, 0, &mapped).Check("Map buffer");
+            Unsafe.CopyBlock(mapped.pData, pData, size);
+            _context->Unmap((ID3D11Resource*) d3dBuffer.Buffer, 0);
+        }
+        
         D3D11_BOX box = new D3D11_BOX((int) offset, 0, 0, (int) (offset + size), 1, 1);
         _context->UpdateSubresource((ID3D11Resource*) d3dBuffer.Buffer, 0, &box, pData, 0, 0);
     }
