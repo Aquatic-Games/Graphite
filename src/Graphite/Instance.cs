@@ -58,11 +58,12 @@ public abstract class Instance : IDisposable
     }
 
     /// <summary>
-    /// Create an <see cref="Instance"/>. This will automatically pick the best <see cref="Graphite.Backend"/> for the current
-    /// system.
+    /// Create an <see cref="Instance"/>. This will use one of the registered <see cref="IBackend"/>s.
     /// </summary>
     /// <param name="info">The <see cref="InstanceInfo"/> used to create the instance.</param>
     /// <returns>The created <see cref="Instance"/>.</returns>
+    /// <remarks>The backend chosen will be in the same order as <see cref="RegisterBackend{T}"/> was called. If the
+    /// backend fails to create, it will move onto the next one.</remarks>
     public static Instance Create(in InstanceInfo info)
     {
         Debug.Assert(_backends.Count > 0, "There must be at least 1 backend registered.");

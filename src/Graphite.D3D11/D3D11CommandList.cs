@@ -152,73 +152,7 @@ internal sealed unsafe class D3D11CommandList : CommandList
         // TODO: I wonder if a lot of this can be cached?
         // TODO: Try and reduce code duplication somehow. I'd hate to have to duplicate this for 5 different shaders....
         
-        foreach (Descriptor descriptor in d3dSet.Descriptors)
-        {
-            ShaderStage stages = d3dSet.Layout.Layout[descriptor.Binding].Stages;
-            DescriptorType type = d3dSet.Layout.Layout[descriptor.Binding].Type;
-
-            switch (type)
-            {
-                case DescriptorType.ConstantBuffer:
-                {
-                    Debug.Assert(descriptor.Buffer != null);
-                    D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
-                    uint offset = descriptor.BufferOffset;
-                    uint range = descriptor.BufferRange == uint.MaxValue
-                        ? buffer.Info.SizeInBytes : descriptor.BufferRange;
-                    ID3D11Buffer* buf = buffer.Buffer;
-
-                    if ((stages & ShaderStage.Vertex) != 0)
-                    {
-                        Debug.Assert(d3dPipeline.VertexDescriptors != null);
-                        uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
-                        _context->VSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
-                    }
-
-                    if ((stages & ShaderStage.Pixel) != 0)
-                    {
-                        Debug.Assert(d3dPipeline.PixelDescriptors != null);
-                        uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
-                        _context->PSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
-                    }
-
-                    break;
-                }
-                
-                case DescriptorType.Texture:
-                {
-                    Debug.Assert(descriptor.Texture != null);
-                    Debug.Assert(descriptor.Sampler != null);
-
-                    D3D11Texture texture = (D3D11Texture) descriptor.Texture;
-                    D3D11Sampler sampler = (D3D11Sampler) descriptor.Sampler;
-
-                    ID3D11ShaderResourceView* srv = texture.ResourceView;
-                    ID3D11SamplerState* ss = sampler.Sampler;
-                    
-                    if ((stages & ShaderStage.Vertex) != 0)
-                    {
-                        Debug.Assert(d3dPipeline.VertexDescriptors != null);
-                        uint remappedSlot = d3dPipeline.VertexDescriptors[slot][descriptor.Binding];
-                        _context->VSSetShaderResources(remappedSlot, 1, &srv);
-                        _context->VSSetSamplers(remappedSlot, 1, &ss);
-                    }
-
-                    if ((stages & ShaderStage.Pixel) != 0)
-                    {
-                        Debug.Assert(d3dPipeline.PixelDescriptors != null);
-                        uint remappedSlot = d3dPipeline.PixelDescriptors[slot][descriptor.Binding];
-                        _context->PSSetShaderResources(remappedSlot, 1, &srv);
-                        _context->PSSetSamplers(remappedSlot, 1, &ss);
-                    }
-                    
-                    break;
-                }
-                
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        PushDescriptorsToShader(slot, d3dPipeline, d3dSet.Layout, d3dSet.Descriptors);
     }
     
     public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
@@ -236,7 +170,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
 
     public override void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors)
     {
-        throw new NotImplementedException();
+        D3D11Pipeline d3dPipeline = (D3D11Pipeline) pipeline;
+        PushDescriptorsToShader(slot, d3dPipeline, d3dPipeline.DescriptorLayouts[slot], in descriptors);
     }
 
     public override void Draw(uint numVertices, uint firstVertex = 0)
@@ -256,5 +191,76 @@ internal sealed unsafe class D3D11CommandList : CommandList
         
         GraphiteLog.Log("Releasing deferred context.");
         _context->Release();
+    }
+
+    private void PushDescriptorsToShader(uint slot, D3D11Pipeline pipeline, D3D11DescriptorLayout layout, in ReadOnlySpan<Descriptor> descriptors)
+    {
+        foreach (Descriptor descriptor in descriptors)
+        {
+            ShaderStage stages = layout.Layout[descriptor.Binding].Stages;
+            DescriptorType type = layout.Layout[descriptor.Binding].Type;
+
+            switch (type)
+            {
+                case DescriptorType.ConstantBuffer:
+                {
+                    Debug.Assert(descriptor.Buffer != null);
+                    D3D11Buffer buffer = (D3D11Buffer) descriptor.Buffer;
+                    uint offset = descriptor.BufferOffset;
+                    uint range = descriptor.BufferRange == uint.MaxValue
+                        ? buffer.Info.SizeInBytes : descriptor.BufferRange;
+                    ID3D11Buffer* buf = buffer.Buffer;
+
+                    if ((stages & ShaderStage.Vertex) != 0)
+                    {
+                        Debug.Assert(pipeline.VertexDescriptors != null);
+                        uint remappedSlot = pipeline.VertexDescriptors[slot][descriptor.Binding];
+                        _context->VSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
+                    }
+
+                    if ((stages & ShaderStage.Pixel) != 0)
+                    {
+                        Debug.Assert(pipeline.PixelDescriptors != null);
+                        uint remappedSlot = pipeline.PixelDescriptors[slot][descriptor.Binding];
+                        _context->PSSetConstantBuffers1(remappedSlot, 1, &buf, &offset, &range);
+                    }
+
+                    break;
+                }
+                
+                case DescriptorType.Texture:
+                {
+                    Debug.Assert(descriptor.Texture != null);
+                    Debug.Assert(descriptor.Sampler != null);
+
+                    D3D11Texture texture = (D3D11Texture) descriptor.Texture;
+                    D3D11Sampler sampler = (D3D11Sampler) descriptor.Sampler;
+
+                    ID3D11ShaderResourceView* srv = texture.ResourceView;
+                    ID3D11SamplerState* ss = sampler.Sampler;
+                    
+                    if ((stages & ShaderStage.Vertex) != 0)
+                    {
+                        Debug.Assert(pipeline.VertexDescriptors != null);
+                        uint remappedSlot = pipeline.VertexDescriptors[slot][descriptor.Binding];
+                        _context->VSSetShaderResources(remappedSlot, 1, &srv);
+                        _context->VSSetSamplers(remappedSlot, 1, &ss);
+                    }
+
+                    if ((stages & ShaderStage.Pixel) != 0)
+                    {
+                        Debug.Assert(pipeline.PixelDescriptors != null);
+                        uint remappedSlot = pipeline.PixelDescriptors[slot][descriptor.Binding];
+                        _context->PSSetShaderResources(remappedSlot, 1, &srv);
+                        _context->PSSetSamplers(remappedSlot, 1, &ss);
+                    }
+                    
+                    break;
+                }
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 }
