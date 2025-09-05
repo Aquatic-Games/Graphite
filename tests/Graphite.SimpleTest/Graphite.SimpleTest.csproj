@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\Graphite.D3D11\Graphite.D3D11.csproj" />
+      <ProjectReference Include="..\..\src\Graphite.OpenGL\Graphite.OpenGL.csproj" />
       <ProjectReference Include="..\..\src\Graphite.ShaderTools\Graphite.ShaderTools.csproj" />
       <ProjectReference Include="..\..\src\Graphite.Vulkan\Graphite.Vulkan.csproj" />
       <ProjectReference Include="..\..\src\Graphite\Graphite.csproj" />

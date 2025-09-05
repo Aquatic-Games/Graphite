@@ -1,6 +1,6 @@
 namespace Graphite.OpenGL;
 
-internal sealed class GLTexture : Texture
+/*internal sealed class GLTexture : Texture
 {
     public static 
     
@@ -10,4 +10,4 @@ internal sealed class GLTexture : Texture
     {
         throw new NotImplementedException();
     }
-}
+}*/

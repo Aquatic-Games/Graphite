@@ -22,7 +22,7 @@ internal sealed class GLSwapchain : Swapchain
         Size = info.Size;
         Format = info.Format;
 
-        (_, SizedInternalFormat iFormat, _) = info.Format.ToGL();
+        (_, SizedInternalFormat iFormat, _) = GLUtils.ToGL(info.Format);
 
         _texture = _gl.GenTexture();
         _gl.BindTexture(TextureTarget.Texture2D, _texture);

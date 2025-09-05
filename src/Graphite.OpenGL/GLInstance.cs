@@ -7,13 +7,15 @@ internal sealed class GLInstance : Instance
 {
     private readonly GLContext _context;
     private readonly GL _gl;
+
+    public override string BackendName => OpenGLBackend.Name;
     
-    public override Backend Backend => Backend.OpenGL;
+    public override Backend Backend => OpenGLBackend.Backend;
 
     public GLInstance(ref readonly InstanceInfo info)
     {
-        Debug.Assert(info.GLContext != null);
-        _context = info.GLContext;
+        Debug.Assert(OpenGLBackend.Context != null, "OpenGLBackend.Context was null. This value must be set to use the OpenGL backend.");
+        _context = OpenGLBackend.Context;
         
         _gl = GL.GetApi(_context.GetProcAddressFunc);
     }

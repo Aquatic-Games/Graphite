@@ -1,9 +1,11 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Graphite;
 using Graphite.Core;
 using Graphite.D3D11;
+using Graphite.OpenGL;
 using Graphite.ShaderTools;
 using Graphite.Vulkan;
 using SDL3;
@@ -18,19 +20,34 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
+Instance.RegisterBackend<OpenGLBackend>();
 Instance.RegisterBackend<D3D11Backend>();
 Instance.RegisterBackend<VulkanBackend>();
-
-Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));
-Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 const int width = 800;
 const int height = 600;
 
-// Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
-IntPtr window = SDL.CreateWindow($"Graphite.SimpleTest - {instance.BackendName}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMajorVersion, OpenGLBackend.MajorVersion);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMinorVersion, OpenGLBackend.MinorVersion);
+SDL.GLSetAttribute(SDL.GLAttr.ContextProfileMask, (int) SDL.GLProfile.Core);
+
+IntPtr window = SDL.CreateWindow($"Graphite.SimpleTest", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.OpenGL);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
+
+IntPtr context = SDL.GLCreateContext(window);
+SDL.GLMakeCurrent(window, context);
+
+OpenGLBackend.Context = new GLContext(s => Marshal.GetFunctionPointerForDelegate(SDL.GLGetProcAddress(s)), i =>
+{
+    SDL.GLSetSwapInterval(i);
+    SDL.GLSwapWindow(window);
+});
+
+Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));
+SDL.SetWindowTitle(window, SDL.GetWindowTitle(window) + $" - {instance.BackendName}");
+
+Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 uint properties = SDL.GetWindowProperties(window);
 SurfaceInfo surfaceInfo;

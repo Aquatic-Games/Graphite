@@ -1,3 +1,4 @@
+using Graphite.Core;
 using Silk.NET.OpenGL;
 
 namespace Graphite.OpenGL;
@@ -6,9 +7,9 @@ internal sealed class GLDevice : Device
 {
     private readonly GL _gl;
     private readonly GLContext _context;
-    
-    public override Backend Backend => Backend.OpenGL;
 
+    public override Backend Backend => OpenGLBackend.Backend;
+    
     public GLDevice(GL gl, GLContext context)
     {
         _gl = gl;
@@ -40,12 +41,12 @@ internal sealed class GLDevice : Device
         throw new NotImplementedException();
     }
     
-    public override unsafe Texture CreateTexture(in TextureInfo info)
+    public override unsafe Texture CreateTexture(in TextureInfo info, void* pData)
     {
         throw new NotImplementedException();
     }
     
-    public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
+    public override DescriptorLayout CreateDescriptorLayout(in DescriptorLayoutInfo info)
     {
         throw new NotImplementedException();
     }
@@ -55,7 +56,22 @@ internal sealed class GLDevice : Device
         throw new NotImplementedException();
     }
     
+    public override Sampler CreateSampler(in SamplerInfo info)
+    {
+        throw new NotImplementedException();
+    }
+    
     public override void ExecuteCommandList(CommandList cl)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public override unsafe void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public override unsafe void UpdateTexture(Texture texture, in Region3D region, void* pData)
     {
         throw new NotImplementedException();
     }
