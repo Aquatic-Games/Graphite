@@ -2,6 +2,7 @@
 using Graphite.Exceptions;
 using TerraFX.Interop.DirectX;
 using TerraFX.Interop.Windows;
+using static TerraFX.Interop.DirectX.D3D11_TEXTURE_ADDRESS_MODE;
 using static TerraFX.Interop.DirectX.DXGI_FORMAT;
 
 namespace Graphite.D3D11;
@@ -85,6 +86,18 @@ internal static class D3DUtils
             Format.BC7_UNorm => DXGI_FORMAT_BC7_UNORM,
             Format.BC7_UNorm_SRGB => DXGI_FORMAT_BC7_UNORM_SRGB,
             _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+        };
+    }
+
+    public static D3D11_TEXTURE_ADDRESS_MODE ToD3D(this AddressMode mode)
+    {
+        return mode switch
+        {
+            AddressMode.Wrap => D3D11_TEXTURE_ADDRESS_WRAP,
+            AddressMode.Mirror => D3D11_TEXTURE_ADDRESS_MIRROR,
+            AddressMode.ClampToEdge => D3D11_TEXTURE_ADDRESS_CLAMP,
+            AddressMode.ClampToBorder => D3D11_TEXTURE_ADDRESS_BORDER,
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
     }
 }

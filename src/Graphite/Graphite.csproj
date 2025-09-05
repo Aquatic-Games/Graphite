@@ -5,16 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Silk.NET.OpenGL" Version="2.22.0" />
-      <PackageReference Include="Silk.NET.Vulkan" Version="2.22.0" />
-      <PackageReference Include="Silk.NET.Vulkan.Extensions.EXT" Version="2.22.0" />
-      <PackageReference Include="Silk.NET.Vulkan.Extensions.KHR" Version="2.22.0" />
-      <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.26100.2" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\Graphite.Core\Graphite.Core.csproj" />
-      <ProjectReference Include="..\Graphite.VulkanMemoryAllocator\Graphite.VulkanMemoryAllocator.csproj" />
     </ItemGroup>
 
 </Project>

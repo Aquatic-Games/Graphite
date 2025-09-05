@@ -16,6 +16,8 @@ internal sealed unsafe class VulkanDevice : Device
     private readonly CommandPool _pool;
     private readonly CommandBuffer _singleTimeBuffer;
     private readonly Allocator* _allocator;
+
+    private readonly VulkanBuffer _stagingBuffer; 
     
     public readonly VkInstance Instance;
     
@@ -79,7 +81,8 @@ internal sealed unsafe class VulkanDevice : Device
             };
         }
 
-        using Utf8StringArray pExtensions = new Utf8StringArray(KhrSwapchain.ExtensionName);
+        using Utf8StringArray pExtensions =
+            new Utf8StringArray(KhrSwapchain.ExtensionName, KhrPushDescriptor.ExtensionName);
 
         PhysicalDeviceFeatures deviceFeatures = new();
 
@@ -150,6 +153,17 @@ internal sealed unsafe class VulkanDevice : Device
         
         GraphiteLog.Log("Creating allocator.");
         Vma.CreateAllocator(&allocatorInfo, out _allocator).Check("Create allocator");
+        
+        // 64MiB staging buffer used in UpdateBuffer.
+        // TODO: Defer creation of this buffer so that it doesn't take extra space if user decides to handle everything
+        // manually? Or alternatively have some kind of setting. Hmm.
+        GraphiteLog.Log("Creating 64MiB staging buffer.");
+        BufferInfo bufferInfo = new()
+        {
+            Usage = BufferUsage.TransferBuffer,
+            SizeInBytes = 64 * 1024 * 1024
+        };
+        _stagingBuffer = new VulkanBuffer(_vk, this, _allocator, in bufferInfo, null);
     }
 
     public CommandBuffer BeginCommands()
@@ -187,7 +201,7 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override CommandList CreateCommandList()
     {
-        return new VulkanCommandList(_vk, Device, _pool);
+        return new VulkanCommandList(_vk, Instance, Device, _pool);
     }
 
     public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
@@ -206,19 +220,24 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanBuffer(_vk, this, _allocator, in info, data);
     }
 
-    public override Texture CreateTexture(in TextureInfo info)
+    public override Texture CreateTexture(in TextureInfo info, void* pData)
     {
-        return new VulkanTexture(_vk, this, _allocator, in info);
+        return new VulkanTexture(_vk, this, _allocator, in info, pData);
     }
 
-    public override DescriptorLayout CreateDescriptorLayout(params ReadOnlySpan<DescriptorBinding> bindings)
+    public override DescriptorLayout CreateDescriptorLayout(in DescriptorLayoutInfo info)
     {
-        return new VulkanDescriptorLayout(_vk, Device, bindings);
+        return new VulkanDescriptorLayout(_vk, Device, in info);
     }
 
     public override DescriptorSet CreateDescriptorSet(DescriptorLayout layout, params ReadOnlySpan<Descriptor> descriptors)
     {
         return new VulkanDescriptorSet(_vk, Device, layout, descriptors);
+    }
+
+    public override Sampler CreateSampler(in SamplerInfo info)
+    {
+        return new VulkanSampler(_vk, Device, in info);
     }
 
     public override void ExecuteCommandList(CommandList cl)
@@ -239,6 +258,84 @@ internal sealed unsafe class VulkanDevice : Device
         _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
     }
 
+    public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    {
+        VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
+
+        // If the buffer is already mappable, no need to copy with a transfer buffer.
+        if (vkBuffer.IsMappable)
+        {
+            void* mapBuffer;
+            Vma.MapMemory(_allocator, vkBuffer.Allocation, &mapBuffer).Check("Map buffer");
+            Unsafe.CopyBlock((byte*) mapBuffer + offset, pData, size);
+            Vma.UnmapMemory(_allocator, vkBuffer.Allocation);
+            return;
+        }
+        
+        if (size >= _stagingBuffer.Info.SizeInBytes)
+            throw new NotImplementedException();
+
+        void* mapStagingBuffer;
+        Vma.MapMemory(_allocator, _stagingBuffer.Allocation, &mapStagingBuffer).Check("Map staging buffer");
+        Unsafe.CopyBlock(mapStagingBuffer, pData, size);
+        Vma.UnmapMemory(_allocator, _stagingBuffer.Allocation);
+
+        CommandBuffer cb = BeginCommands();
+
+        BufferCopy copy = new()
+        {
+            SrcOffset = 0,
+            Size = size,
+            DstOffset = offset
+        };
+        
+        _vk.CmdCopyBuffer(cb, _stagingBuffer.Buffer, vkBuffer.Buffer, 1, &copy);
+        
+        EndCommands();
+    }
+
+    public override void UpdateTexture(Texture texture, in Region3D region, void* pData)
+    {
+        VulkanTexture vkTexture = (VulkanTexture) texture;
+        uint rowPitch = vkTexture.Info.Format.Bpp() / 8;
+        uint size = region.Width * region.Height * region.Depth * rowPitch;
+        
+        if (size >= _stagingBuffer.Info.SizeInBytes)
+            throw new NotImplementedException();
+        
+        void* mapStagingBuffer;
+        Vma.MapMemory(_allocator, _stagingBuffer.Allocation, &mapStagingBuffer).Check("Map staging buffer");
+        Unsafe.CopyBlock(mapStagingBuffer, pData, size);
+        Vma.UnmapMemory(_allocator, _stagingBuffer.Allocation);
+
+        CommandBuffer cb = BeginCommands();
+
+        BufferImageCopy copy = new()
+        {
+            ImageOffset = region.Offset.ToVk(),
+            ImageExtent = region.Size.ToVk(),
+            BufferOffset = 0,
+            //BufferRowLength = rowPitch * region.Width,
+            //BufferImageHeight = region.Height,
+            ImageSubresource = new ImageSubresourceLayers
+            {
+                AspectMask = ImageAspectFlags.ColorBit,
+                BaseArrayLayer = 0,
+                LayerCount = 1,
+                MipLevel = 0
+            }
+        };
+
+        vkTexture.Transition(cb, vkTexture.CurrentLayout, ImageLayout.TransferDstOptimal, 0,
+            AccessFlags.TransferWriteBit, PipelineStageFlags.TransferBit, PipelineStageFlags.TransferBit);
+        _vk.CmdCopyBufferToImage(cb, _stagingBuffer.Buffer, vkTexture.Image, ImageLayout.TransferDstOptimal, 1, &copy);
+        vkTexture.Transition(cb, ImageLayout.TransferDstOptimal, ImageLayout.ShaderReadOnlyOptimal,
+            AccessFlags.TransferWriteBit, AccessFlags.ShaderReadBit, PipelineStageFlags.TransferBit,
+            PipelineStageFlags.AllGraphicsBit);
+        
+        EndCommands();
+    }
+
     public override IntPtr MapBuffer(Buffer buffer)
     {
         VulkanBuffer vkBuffer = (VulkanBuffer) buffer;
@@ -257,6 +354,8 @@ internal sealed unsafe class VulkanDevice : Device
 
     public override void Dispose()
     {
+        _stagingBuffer.Dispose();
+        
         GraphiteLog.Log("Destroying allocator.");
         Vma.DestroyAllocator(_allocator);
         

@@ -6,10 +6,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <RootNamespace>Graphite.Tests</RootNamespace>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\src\Graphite.D3D11\Graphite.D3D11.csproj" />
       <ProjectReference Include="..\..\src\Graphite.ShaderTools\Graphite.ShaderTools.csproj" />
+      <ProjectReference Include="..\..\src\Graphite.Vulkan\Graphite.Vulkan.csproj" />
       <ProjectReference Include="..\..\src\Graphite\Graphite.csproj" />
     </ItemGroup>
 
@@ -21,6 +25,9 @@
     <ItemGroup>
       <None Include="*.hlsl" CopyToOutputDirectory="PreserveNewest" />
       <None Update="DEBUG.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Bagel.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

@@ -13,8 +13,10 @@ internal sealed unsafe class VulkanInstance : Instance
 
     private readonly ExtDebugUtils? _debugUtilsExt;
     private readonly DebugUtilsMessengerEXT _debugMessenger;
+
+    public override string BackendName => VulkanBackend.Name;
     
-    public override Backend Backend => Backend.Vulkan;
+    public override Backend Backend => VulkanBackend.Backend;
     
     public VulkanInstance(ref readonly InstanceInfo info)
     {
@@ -103,8 +105,7 @@ internal sealed unsafe class VulkanInstance : Instance
                 PfnUserCallback = new PfnDebugUtilsMessengerCallbackEXT(DebugMessage)
             };
 
-            _debugUtilsExt!.CreateDebugUtilsMessenger(_instance, &messengerInfo, null, out _debugMessenger)
-                .Check("Create debug messenger");
+            _debugUtilsExt!.CreateDebugUtilsMessenger(_instance, &messengerInfo, null, out _debugMessenger).Check("Create debug messenger");
         }
     }
 

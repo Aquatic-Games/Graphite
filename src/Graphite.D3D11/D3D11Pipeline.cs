@@ -16,6 +16,7 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
 
     public readonly Dictionary<uint, Dictionary<uint, uint>>? VertexDescriptors;
     public readonly Dictionary<uint, Dictionary<uint, uint>>? PixelDescriptors;
+    public readonly D3D11DescriptorLayout[] DescriptorLayouts;
     
     public D3D11Pipeline(ID3D11Device1* device, ref readonly GraphicsPipelineInfo info)
     {
@@ -24,19 +25,21 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
         
         D3D11ShaderModule pixelShader = (D3D11ShaderModule) info.PixelShader;
         PixelDescriptors = GetDescriptorRemappings(pixelShader.Mapping);
+
+        DescriptorLayouts = new D3D11DescriptorLayout[info.Descriptors.Length];
+        for (int i = 0; i < DescriptorLayouts.Length; i++)
+            DescriptorLayouts[i] = (D3D11DescriptorLayout) info.Descriptors[i];
         
         // pressed the wrong key and I laughed so I am not changing it
         fixed (ID3D11VertexShader** pBertexShader = &VertexShader)
         {
-            device->CreateVertexShader(vertexShader.Data, vertexShader.DataLength, null, pBertexShader)
-                .Check("Create vertex shader");
+            device->CreateVertexShader(vertexShader.Data, vertexShader.DataLength, null, pBertexShader).Check("Create vertex shader");
         }
         
         // Create the 🅱️ixel shader
         fixed (ID3D11PixelShader** pBixelShader = &PixelShader)
         {
-            device->CreatePixelShader(pixelShader.Data, pixelShader.DataLength, null, pBixelShader)
-                .Check("Create pixel shader");
+            device->CreatePixelShader(pixelShader.Data, pixelShader.DataLength, null, pBixelShader).Check("Create pixel shader");
         }
 
         if (info.InputLayout.Length > 0)

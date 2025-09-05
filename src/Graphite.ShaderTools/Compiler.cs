@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Graphite.Core;
 using Silk.NET.SPIRV;
 using Silk.NET.SPIRV.Cross;
@@ -25,6 +27,18 @@ public static unsafe class Compiler
     static Compiler()
     {
         _spirv = Cross.GetApi();
+        ResolveLibrary += OnResolveLibrary;
+    }
+
+    private static IntPtr OnResolveLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        string newLibName = libraryName switch
+        {
+            "d3dcompiler47" => "libvkd3d-utils",
+            _ => libraryName
+        };
+
+        return NativeLibrary.Load(newLibName, assembly, searchPath);
     }
 
     /// <summary>
@@ -220,10 +234,36 @@ public static unsafe class Compiler
             CheckResult(_spirv.CompilerCompile(compiler, &compiled), "Compile");
 
             GraphiteLog.Log(new string((sbyte*) compiled));
+            
+            CheckResult(_spirv.CompilerBuildCombinedImageSamplers(compiler), "Build combined image samplers");
+            uint samplerId;
+            CheckResult(_spirv.CompilerBuildDummySamplerForCombinedImages(compiler, &samplerId), "Build dummy sampler");
+            
+            CombinedImageSampler* combinedSamplers;
+            nuint numSamplers;
+            CheckResult(_spirv.CompilerGetCombinedImageSamplers(compiler, &combinedSamplers, &numSamplers), "Get combined image samplers");
 
+            for (uint i = 0; i < numSamplers; i++)
+            {
+                uint id = combinedSamplers[i].ImageId;
+                uint newId = combinedSamplers[i].CombinedId;
+                
+                uint set = _spirv.CompilerGetDecoration(compiler, id, Decoration.DescriptorSet);
+                uint binding = _spirv.CompilerGetDecoration(compiler, id, Decoration.Binding);
+                _spirv.CompilerSetDecoration(compiler, newId, Decoration.DescriptorSet, set);
+                _spirv.CompilerSetDecoration(compiler, newId, Decoration.Binding, binding);
+            }
+            
             mapping = new ShaderMappingInfo();
             Resources* resources;
             CheckResult(_spirv.CompilerCreateShaderResources(compiler, &resources), "Create shader resources");
+            
+            List<DescriptorMapping> descriptorMappings = [];
+            
+            RemapDescriptorsForType(compiler, resources, ResourceType.UniformBuffer, descriptorMappings);
+            RemapDescriptorsForType(compiler, resources, ResourceType.SampledImage, descriptorMappings);
+
+            mapping.Descriptors = descriptorMappings.ToArray();
             
             if (backend == GrBackend.D3D11)
             {
@@ -278,6 +318,27 @@ public static unsafe class Compiler
 
         blob->Release();
         return compiled;
+    }
+
+    private static void RemapDescriptorsForType(SpvCompiler* compiler, Resources* resources, ResourceType type, List<DescriptorMapping> mappings)
+    {
+        ReflectedResource* resource;
+        nuint numResources;
+        _spirv.ResourcesGetResourceListForType(resources, type, &resource, &numResources);
+
+        for (uint i = 0; i < numResources; i++)
+        {
+            uint id = resource[i].Id;
+            
+            uint set = _spirv.CompilerGetDecoration(compiler, id, Decoration.DescriptorSet);
+            uint binding = _spirv.CompilerGetDecoration(compiler, id, Decoration.Binding);
+
+            uint slot = i;
+            _spirv.CompilerSetDecoration(compiler, id, Decoration.DescriptorSet, 0);
+            _spirv.CompilerSetDecoration(compiler, id, Decoration.Binding, slot);
+            
+            mappings.Add(new DescriptorMapping(set, binding, slot));
+        }
     }
 
     private static void CheckResult(Result result, string operation)

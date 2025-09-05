@@ -31,12 +31,14 @@ public abstract class CommandList : IDisposable
     /// <param name="src">The source <see cref="Buffer"/>.</param>
     /// <param name="srcOffset">The offset into the source buffer, in bytes.</param>
     /// <param name="dest">The destination <see cref="Texture"/>.</param>
-    /// <param name="size">The size of the texture region to copy. If 0, the entire texture region will be copied.</param>
-    /// <param name="offset">The offset of the texture region to copy.</param>
+    /// <param name="region">The texture region to copy to. If null, the full texture region will be used.</param>
     /// <remarks>This is a transfer operation, and cannot occur inside a render pass.</remarks>
-    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Size3D size = default,
-        Offset3D offset = default);
+    public abstract void CopyBufferToTexture(Buffer src, uint srcOffset, Texture dest, Region3D? region = null);
 
+    /// <summary>
+    /// Generate mipmaps for the given <see cref="Texture"/>.
+    /// </summary>
+    /// <param name="texture">The <see cref="Texture"/> to generate mipmaps for.</param>
     public abstract void GenerateMipmaps(Texture texture);
 
     /// <summary>
@@ -44,6 +46,9 @@ public abstract class CommandList : IDisposable
     /// </summary>
     /// <param name="colorAttachments">The color attachments that will be used in this render pass.</param>
     public abstract void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments);
+
+    public void BeginRenderPass(in ColorAttachmentInfo colorAttachment)
+        => BeginRenderPass([colorAttachment]);
 
     /// <summary>
     /// End the currently active render pass.
@@ -80,6 +85,8 @@ public abstract class CommandList : IDisposable
     /// <param name="format">The <see cref="Format"/> of the buffer. Valid values are: <see cref="Format.R16_UInt"/> and <see cref="Format.R32_UInt"/>.</param>
     /// <param name="offset">The offset, in bytes, into the buffer.</param>
     public abstract void SetIndexBuffer(Buffer buffer, Format format, uint offset = 0);
+
+    public abstract void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors);
     
     /// <summary>
     /// Draw primitives.

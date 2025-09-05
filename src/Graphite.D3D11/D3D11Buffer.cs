@@ -15,7 +15,7 @@ internal sealed unsafe class D3D11Buffer : Buffer
 
     public readonly D3D11_MAP MapType;
     
-    public D3D11Buffer(ID3D11Device1* device, ref readonly BufferInfo info, void* data) : base(info)
+    public D3D11Buffer(ID3D11Device1* device, ref readonly BufferInfo info, void* data) : base((BufferInfo) info)
     {
         D3D11_BIND_FLAG flags = 0;
         D3D11_USAGE usage = D3D11_USAGE_DEFAULT;

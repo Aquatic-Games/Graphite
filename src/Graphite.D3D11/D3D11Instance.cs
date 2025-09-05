@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
-using TerraFX.Interop.Windows;
 using static TerraFX.Interop.DirectX.DirectX;
 using static TerraFX.Interop.Windows.Windows;
 
@@ -15,13 +14,20 @@ internal sealed unsafe class D3D11Instance : Instance
     private readonly bool _debug;
     private readonly IDXGIFactory1* _factory;
 
-    public override Backend Backend => Backend.D3D11;
+    public override string BackendName => D3D11Backend.Name;
+
+    public override Backend Backend => D3D11Backend.Backend;
     
     public D3D11Instance(ref readonly InstanceInfo info)
     {
         if (IsDXVK)
             ResolveLibrary += OnResolveLibrary;
-        
+        else if (!OperatingSystem.IsWindows())
+        {
+            throw new PlatformNotSupportedException(
+                "D3D11 is not supprted on non-Windows platforms unless the GRAPHITE_USE_DXVK environment variable is set.");
+        }
+
         _debug = info.Debug;
         
         GraphiteLog.Log("Creating DXGI factory.");
@@ -90,6 +96,7 @@ internal sealed unsafe class D3D11Instance : Instance
         {
             "d3d11" => "libdxvk_d3d11",
             "dxgi" => "libdxvk_dxgi",
+            "d3dcompiler_47" => "libvkd3d-utils",
             _ => libraryName
         };
 
@@ -100,7 +107,7 @@ internal sealed unsafe class D3D11Instance : Instance
     
     static D3D11Instance()
     {
-        if (!OperatingSystem.IsWindows())
+        if (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") == "1")
             IsDXVK = true;
     }
 }

@@ -1,6 +1,5 @@
-﻿using Graphite.D3D11;
-using Graphite.OpenGL;
-using Graphite.Vulkan;
+﻿using System.Diagnostics;
+using Graphite.Core;
 
 namespace Graphite;
 /// <summary>
@@ -8,6 +7,11 @@ namespace Graphite;
 /// </summary>
 public abstract class Instance : IDisposable
 {
+    /// <summary>
+    /// The name of the backend.
+    /// </summary>
+    public abstract string BackendName { get; }
+    
     /// <summary>
     /// The API <see cref="Graphite.Backend"/> of this instance.
     /// </summary>
@@ -41,19 +45,48 @@ public abstract class Instance : IDisposable
     /// </summary>
     public abstract void Dispose();
 
+    private static Dictionary<string, IBackendBase> _backends;
+
+    static Instance()
+    {
+        _backends = [];
+    }
+
+    public static void RegisterBackend<T>() where T : IBackend, new()
+    {
+        _backends.Add(T.Name, new T());
+    }
+
     /// <summary>
-    /// Create an <see cref="Instance"/>. This will automatically pick the best <see cref="Graphite.Backend"/> for the current
-    /// system.
+    /// Create an <see cref="Instance"/>. This will use one of the registered <see cref="IBackend"/>s.
     /// </summary>
     /// <param name="info">The <see cref="InstanceInfo"/> used to create the instance.</param>
     /// <returns>The created <see cref="Instance"/>.</returns>
+    /// <remarks>The backend chosen will be in the same order as <see cref="RegisterBackend{T}"/> was called. If the
+    /// backend fails to create, it will move onto the next one.</remarks>
     public static Instance Create(in InstanceInfo info)
     {
-        if (OperatingSystem.IsWindows() || (Environment.GetEnvironmentVariable("GRAPHITE_USE_DXVK") ?? "0") == "1")
-            return new D3D11Instance(in info);
+        Debug.Assert(_backends.Count > 0, "There must be at least 1 backend registered.");
+        GraphiteLog.Log($"Registered backends: [{string.Join(", ", _backends.Keys)}]");
 
-        return new GLInstance(in info);
+        foreach ((string name, IBackendBase backend) in _backends)
+        {
+            GraphiteLog.Log(GraphiteLog.Severity.Error, GraphiteLog.Type.General, $"Creating backend: {name}.");
+            Instance instance;
+            
+            try
+            {
+                instance = backend.CreateInstance(in info);
+            }
+            catch (Exception e)
+            {
+                GraphiteLog.Log(GraphiteLog.Severity.Warning, GraphiteLog.Type.Other, $"Failed to create backend: {e}");
+                continue;
+            }
+            
+            return instance;
+        }
 
-        //return new VulkanInstance(in info);
+        throw new PlatformNotSupportedException("None of the registered backends are supported on this system.");
     }
 }

@@ -2,6 +2,7 @@ using Graphite.Core;
 using Graphite.VulkanMemoryAllocator;
 using Silk.NET.Vulkan;
 using static Graphite.VulkanMemoryAllocator.VmaMemoryUsage;
+using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
 
@@ -21,7 +22,7 @@ internal sealed unsafe class VulkanTexture : Texture
 
     public ImageLayout CurrentLayout;
 
-    public VulkanTexture(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly TextureInfo info) : base(info)
+    public VulkanTexture(Vk vk, VulkanDevice device, Allocator* allocator, ref readonly TextureInfo info, void* pData) : base(info)
     {
         _vk = vk;
         _device = device.Device;
@@ -96,11 +97,18 @@ internal sealed unsafe class VulkanTexture : Texture
         
         GraphiteLog.Log("Creating image view.");
         _vk.CreateImageView(_device, &viewInfo, null, out View).Check("Create image view");
-        
-        CommandBuffer buffer = device.BeginCommands();
-        Transition(buffer, ImageLayout.Undefined, ImageLayout.ShaderReadOnlyOptimal, 0, AccessFlags.ShaderReadBit,
-            PipelineStageFlags.AllGraphicsBit, PipelineStageFlags.AllGraphicsBit, mipLevels: MipLevels);
-        device.EndCommands();
+
+        if (pData == null)
+        {
+            CommandBuffer buffer = device.BeginCommands();
+            Transition(buffer, ImageLayout.Undefined, ImageLayout.ShaderReadOnlyOptimal, 0, AccessFlags.ShaderReadBit,
+                PipelineStageFlags.AllGraphicsBit, PipelineStageFlags.AllGraphicsBit, mipLevels: MipLevels);
+            device.EndCommands();
+
+            return;
+        }
+
+        device.UpdateTexture(this, new Region3D(new Offset3D(), info.Size), pData);
     }
     
     public VulkanTexture(Vk vk, Image image, VkDevice device, Extent2D extent, Format format)
