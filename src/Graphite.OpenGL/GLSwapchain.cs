@@ -71,6 +71,14 @@ internal sealed class GLSwapchain : Swapchain
     
     public override void Present()
     {
+        _gl.Disable(EnableCap.Blend);
+        _gl.Disable(EnableCap.DepthTest);
+        
+        _gl.Enable(EnableCap.CullFace);
+        _gl.CullFace(TriangleFace.Back);
+        _gl.FrontFace(FrontFaceDirection.CW);
+        
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.BindVertexArray(_vao);
         
         _gl.UseProgram(_program);

@@ -1,4 +1,5 @@
 using Graphite.Core;
+using Graphite.OpenGL.Instructions;
 using Silk.NET.OpenGL;
 
 namespace Graphite.OpenGL;
@@ -27,7 +28,7 @@ internal sealed class GLDevice : Device
     
     public override CommandList CreateCommandList()
     {
-        throw new NotImplementedException();
+        return new GLCommandList();
     }
     
     public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
@@ -67,7 +68,27 @@ internal sealed class GLDevice : Device
     
     public override void ExecuteCommandList(CommandList cl)
     {
-        throw new NotImplementedException();
+        GLCommandList glList = (GLCommandList) cl;
+
+        foreach (IInstruction instruction in glList.Instructions)
+        {
+            switch (instruction)
+            {
+                case BeginRenderPassInstruction renderPass:
+                {
+                    uint framebuffer = GetFramebuffer(renderPass.ColorAttachments);
+                    _gl.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
+
+                    _gl.ClearColor(renderPass.ClearColor.R, renderPass.ClearColor.G, renderPass.ClearColor.B,
+                        renderPass.ClearColor.A);
+                    _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                    
+                    break;
+                }
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
     
     public override unsafe void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
@@ -108,6 +129,7 @@ internal sealed class GLDevice : Device
         {
             GraphiteLog.Log($"Creating framebuffer {hashCode}.");
             framebuffer = _gl.CreateFramebuffer();
+            _gl.BindFramebuffer(FramebufferTarget.Framebuffer, framebuffer);
 
             foreach (GLTexture texture in colorAttachments)
             {
@@ -117,6 +139,9 @@ internal sealed class GLDevice : Device
 
             if (depthAttachment != null)
                 throw new NotImplementedException();
+
+            if (_gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer) != GLEnum.FramebufferComplete)
+                throw new Exception("Framebuffer is not complete!");
             
             _framebufferCache.Add(hashCode, framebuffer);
         }

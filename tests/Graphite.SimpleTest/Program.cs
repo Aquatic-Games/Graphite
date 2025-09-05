@@ -82,7 +82,7 @@ else
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
-//CommandList cl = device.CreateCommandList();
+CommandList cl = device.CreateCommandList();
 Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
@@ -232,12 +232,12 @@ while (alive)
     device.UnmapBuffer(constantBuffer);
     value += 0.01f;
     if (value >= float.Pi * 2)
-        value -= float.Pi * 2;
+        value -= float.Pi * 2;*/
     
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(swapchainTexture, new ColorF(Color.CornflowerBlue))]);
     
-    cl.SetGraphicsPipeline(pipeline);
+    /*cl.SetGraphicsPipeline(pipeline);
     
     cl.SetDescriptorSet(0, pipeline, textureSet);
     cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
@@ -245,13 +245,13 @@ while (alive)
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     
-    cl.DrawIndexed(6);
+    cl.DrawIndexed(6);*/
     //cl.Draw(6);
     
     cl.EndRenderPass();
     cl.End();
     
-    device.ExecuteCommandList(cl);*/
+    device.ExecuteCommandList(cl);
     swapchain.Present();
 }
 
@@ -266,7 +266,7 @@ constantBuffer.Dispose();
 indexBuffer.Dispose();
 vertexBuffer.Dispose();*/
 swapchain.Dispose();
-//cl.Dispose();
+cl.Dispose();
 device.Dispose();
 surface.Dispose();
 instance.Dispose();
