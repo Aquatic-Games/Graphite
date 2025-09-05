@@ -8,17 +8,21 @@ internal sealed class GLDevice : Device
     private readonly GL _gl;
     private readonly GLContext _context;
 
+    private readonly Dictionary<int, uint> _framebufferCache;
+
     public override Backend Backend => OpenGLBackend.Backend;
     
     public GLDevice(GL gl, GLContext context)
     {
         _gl = gl;
         _context = context;
+
+        _framebufferCache = [];
     }
     
     public override Swapchain CreateSwapchain(in SwapchainInfo info)
     {
-        throw new NotImplementedException();
+        return new GLSwapchain(_gl, _context, in info);
     }
     
     public override CommandList CreateCommandList()
@@ -86,8 +90,37 @@ internal sealed class GLDevice : Device
         throw new NotImplementedException();
     }
     
-    public override void Dispose()
+    public override void Dispose() { }
+
+    public uint GetFramebuffer(ReadOnlySpan<GLTexture> colorAttachments, GLTexture? depthAttachment = null)
     {
-        throw new NotImplementedException();
+        HashCode code = new HashCode();
+        
+        foreach (GLTexture texture in colorAttachments)
+            code.Add(texture);
+
+        if (depthAttachment != null)
+            code.Add(depthAttachment);
+
+        int hashCode = code.ToHashCode();
+        
+        if (!_framebufferCache.TryGetValue(hashCode, out uint framebuffer))
+        {
+            GraphiteLog.Log($"Creating framebuffer {hashCode}.");
+            framebuffer = _gl.CreateFramebuffer();
+
+            foreach (GLTexture texture in colorAttachments)
+            {
+                _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                    TextureTarget.Texture2D, texture.Texture, 0);
+            }
+
+            if (depthAttachment != null)
+                throw new NotImplementedException();
+            
+            _framebufferCache.Add(hashCode, framebuffer);
+        }
+        
+        return framebuffer;
     }
 }

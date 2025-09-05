@@ -82,12 +82,12 @@ else
 
 Surface surface = instance.CreateSurface(in surfaceInfo);
 Device device = instance.CreateDevice(surface);
-CommandList cl = device.CreateCommandList();
+//CommandList cl = device.CreateCommandList();
 Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
-ReadOnlySpan<float> vertices =
+/*ReadOnlySpan<float> vertices =
 [
     -0.5f, -0.5f, 0.0f, 1.0f,
     -0.5f, +0.5f, 0.0f, 0.0f,
@@ -127,7 +127,7 @@ cl.Begin();
 cl.GenerateMipmaps(texture0);
 cl.GenerateMipmaps(texture1);
 cl.End();
-device.ExecuteCommandList(cl);
+device.ExecuteCommandList(cl);*/
 
 /*uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
@@ -170,7 +170,7 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();*/
 
-string shader = File.ReadAllText("Shader.hlsl");
+/*string shader = File.ReadAllText("Shader.hlsl");
 
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
@@ -207,7 +207,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 });
 
 pixelShader.Dispose();
-vertexShader.Dispose();
+vertexShader.Dispose();*/
 
 float value = 0;
 
@@ -226,7 +226,7 @@ while (alive)
 
     Texture swapchainTexture = swapchain.GetNextTexture();
 
-    nint map = device.MapBuffer(constantBuffer);
+    /*nint map = device.MapBuffer(constantBuffer);
     Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
     unsafe { Unsafe.CopyBlock((void*) map, Unsafe.AsPointer(ref matrix), 64); }
     device.UnmapBuffer(constantBuffer);
@@ -251,11 +251,11 @@ while (alive)
     cl.EndRenderPass();
     cl.End();
     
-    device.ExecuteCommandList(cl);
+    device.ExecuteCommandList(cl);*/
     swapchain.Present();
 }
 
-pipeline.Dispose();
+/*pipeline.Dispose();
 transformLayout.Dispose();
 textureSet.Dispose();
 textureLayout.Dispose();
@@ -264,9 +264,9 @@ texture1.Dispose();
 texture0.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
-vertexBuffer.Dispose();
+vertexBuffer.Dispose();*/
 swapchain.Dispose();
-cl.Dispose();
+//cl.Dispose();
 device.Dispose();
 surface.Dispose();
 instance.Dispose();
