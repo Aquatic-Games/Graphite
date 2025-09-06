@@ -4,7 +4,7 @@ using Silk.NET.OpenGL;
 
 namespace Graphite.OpenGL;
 
-internal sealed class GLDevice : Device
+internal sealed unsafe class GLDevice : Device
 {
     private readonly GL _gl;
     private readonly GLContext _context;
@@ -71,6 +71,8 @@ internal sealed class GLDevice : Device
     {
         GLCommandList glList = (GLCommandList) cl;
 
+        DrawElementsType elementsType = 0;
+
         foreach (IInstruction instruction in glList.Instructions)
         {
             switch (instruction)
@@ -95,9 +97,36 @@ internal sealed class GLDevice : Device
                     break;
                 }
 
+                case SetVertexBufferInstruction setVertexBuffer:
+                {
+                    _gl.BindVertexBuffer(setVertexBuffer.Slot, setVertexBuffer.Buffer.Buffer,
+                        (nint) setVertexBuffer.Offset, setVertexBuffer.Stride);
+                    break;
+                }
+
+                case SetIndexBufferInstruction setIndexBuffer:
+                {
+                    _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, setIndexBuffer.Buffer.Buffer);
+                    elementsType = setIndexBuffer.Format switch
+                    {
+                        Format.R8_UInt => DrawElementsType.UnsignedByte,
+                        Format.R16_UInt => DrawElementsType.UnsignedShort,
+                        Format.R32_UInt => DrawElementsType.UnsignedInt,
+                        _ => throw new NotSupportedException()
+                    };
+                    break;
+                }
+
                 case DrawInstruction draw:
                 {
                     _gl.DrawArrays(PrimitiveType.Triangles, (int) draw.FirstVertex, draw.NumVertices);
+                    break;
+                }
+
+                case DrawIndexedInstruction drawIndexed:
+                {
+                    _gl.DrawElementsBaseVertex(PrimitiveType.Triangles, drawIndexed.NumIndices, elementsType,
+                        (void*) drawIndexed.FirstIndex, drawIndexed.BaseVertex);
                     break;
                 }
                 
@@ -107,12 +136,12 @@ internal sealed class GLDevice : Device
         }
     }
     
-    public override unsafe void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
+    public override void UpdateBuffer(Buffer buffer, uint offset, uint size, void* pData)
     {
         throw new NotImplementedException();
     }
     
-    public override unsafe void UpdateTexture(Texture texture, in Region3D region, void* pData)
+    public override void UpdateTexture(Texture texture, in Region3D region, void* pData)
     {
         throw new NotImplementedException();
     }

@@ -60,12 +60,12 @@ internal sealed class GLCommandList : CommandList
     
     public override void SetVertexBuffer(uint slot, Buffer buffer, uint stride, uint offset = 0)
     {
-        throw new NotImplementedException();
+        Instructions.Add(new SetVertexBufferInstruction(slot, (GLBuffer) buffer, stride, offset));
     }
     
     public override void SetIndexBuffer(Buffer buffer, Format format, uint offset = 0)
     {
-        throw new NotImplementedException();
+        Instructions.Add(new SetIndexBufferInstruction((GLBuffer) buffer, format, offset));
     }
     
     public override void PushDescriptors(uint slot, Pipeline pipeline, params ReadOnlySpan<Descriptor> descriptors)
@@ -84,7 +84,7 @@ internal sealed class GLCommandList : CommandList
     
     public override void DrawIndexed(uint numIndices, uint firstIndex = 0, int baseVertex = 0)
     {
-        throw new NotImplementedException();
+        Instructions.Add(new DrawIndexedInstruction(numIndices, firstIndex, baseVertex));
     }
     
     public override void Dispose() { }
