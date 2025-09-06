@@ -237,16 +237,16 @@ while (alive)
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(swapchainTexture, new ColorF(Color.CornflowerBlue))]);
     
-    /*cl.SetGraphicsPipeline(pipeline);
+    cl.SetGraphicsPipeline(pipeline);
     
-    cl.SetDescriptorSet(0, pipeline, textureSet);
+    /*cl.SetDescriptorSet(0, pipeline, textureSet);
     cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
     
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     
     cl.DrawIndexed(6);*/
-    //cl.Draw(6);
+    cl.Draw(6);
     
     cl.EndRenderPass();
     cl.End();

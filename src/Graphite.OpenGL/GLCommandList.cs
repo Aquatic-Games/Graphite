@@ -47,7 +47,10 @@ internal sealed class GLCommandList : CommandList
     
     public override void SetGraphicsPipeline(Pipeline pipeline)
     {
-        throw new NotImplementedException();
+        Instructions.Add(new SetPipelineInstruction()
+        {
+            Pipeline = (GLPipeline) pipeline
+        });
     }
     
     public override void SetDescriptorSet(uint slot, Pipeline pipeline, DescriptorSet set)
@@ -72,7 +75,11 @@ internal sealed class GLCommandList : CommandList
     
     public override void Draw(uint numVertices, uint firstVertex = 0)
     {
-        throw new NotImplementedException();
+        Instructions.Add(new DrawInstruction()
+        {
+            NumVertices = numVertices,
+            FirstVertex = firstVertex
+        });
     }
     
     public override void DrawIndexed(uint numIndices, uint firstIndex = 0, int baseVertex = 0)

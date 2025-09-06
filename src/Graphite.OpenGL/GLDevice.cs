@@ -86,6 +86,21 @@ internal sealed class GLDevice : Device
                     
                     break;
                 }
+
+                case SetPipelineInstruction setPipeline:
+                {
+                    GLPipeline pipeline = setPipeline.Pipeline;
+                    _gl.BindVertexArray(pipeline.VertexArray);
+                    _gl.UseProgram(pipeline.ShaderProgram);
+                    break;
+                }
+
+                case DrawInstruction draw:
+                {
+                    _gl.DrawArrays(PrimitiveType.Triangles, (int) draw.FirstVertex, draw.NumVertices);
+                    break;
+                }
+                
                 default:
                     throw new ArgumentOutOfRangeException();
             }
