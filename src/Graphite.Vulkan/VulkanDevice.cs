@@ -204,7 +204,8 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanCommandList(_vk, Instance, Device, _pool);
     }
 
-    public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
+    public override ShaderModule CreateShaderModule(ShaderStage stage, byte[] code, string entryPoint,
+        ShaderMappingInfo mapping = default)
     {
         // Vulkan natively supports descriptor sets and does not need any vertex remapping, so we ignore any mapping values.
         return new VulkanShaderModule(_vk, Device, code, entryPoint);

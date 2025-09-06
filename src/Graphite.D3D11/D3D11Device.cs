@@ -49,7 +49,8 @@ internal sealed unsafe class D3D11Device : Device
         return new D3D11CommandList(_device);
     }
     
-    public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
+    public override ShaderModule CreateShaderModule(ShaderStage stage, byte[] code, string entryPoint,
+        ShaderMappingInfo mapping = default)
     {
         return new D3D11ShaderModule(code, in mapping);
     }

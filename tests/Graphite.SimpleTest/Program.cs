@@ -170,12 +170,12 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();*/
 
-/*string shader = File.ReadAllText("Shader.hlsl");
+string shader = File.ReadAllText("SimpleShader.hlsl");
 
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
-DescriptorLayout textureLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
+/*DescriptorLayout textureLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
 {
     Bindings =
     [
@@ -204,10 +204,10 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
         new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
     Descriptors = [textureLayout, transformLayout]
-});
+});*/
 
 pixelShader.Dispose();
-vertexShader.Dispose();*/
+vertexShader.Dispose();
 
 float value = 0;
 

@@ -31,9 +31,10 @@ internal sealed class GLDevice : Device
         return new GLCommandList();
     }
     
-    public override ShaderModule CreateShaderModule(byte[] code, string entryPoint, ShaderMappingInfo mapping = default)
+    public override ShaderModule CreateShaderModule(ShaderStage stage, byte[] code, string entryPoint,
+        ShaderMappingInfo mapping = default)
     {
-        throw new NotImplementedException();
+        return new GLShaderModule(_gl, stage, code);
     }
     
     public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)
