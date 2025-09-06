@@ -44,7 +44,7 @@ internal sealed class GLDevice : Device
     
     public override unsafe Buffer CreateBuffer(in BufferInfo info, void* data)
     {
-        throw new NotImplementedException();
+        return new GLBuffer(_gl, in info, data);
     }
     
     public override unsafe Texture CreateTexture(in TextureInfo info, void* pData)

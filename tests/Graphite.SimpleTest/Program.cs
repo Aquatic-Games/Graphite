@@ -21,7 +21,7 @@ if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
 Instance.RegisterBackend<OpenGLBackend>();
-Instance.RegisterBackend<D3D11Backend>();
+//Instance.RegisterBackend<D3D11Backend>();
 Instance.RegisterBackend<VulkanBackend>();
 
 const int width = 800;
@@ -87,7 +87,7 @@ Swapchain swapchain =
     device.CreateSwapchain(new SwapchainInfo(surface, Format.B8G8R8A8_UNorm, new Size2D(width, height),
         PresentMode.Fifo, 2));
 
-/*ReadOnlySpan<float> vertices =
+ReadOnlySpan<float> vertices =
 [
     -0.5f, -0.5f, 0.0f, 1.0f,
     -0.5f, +0.5f, 0.0f, 0.0f,
@@ -101,7 +101,7 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
+/*ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
 ImageResult result1 = ImageResult.FromMemory(File.ReadAllBytes("Bagel.png"), ColorComponents.RedGreenBlueAlpha);
 
 TextureInfo textureInfo = new()
@@ -114,13 +114,13 @@ TextureInfo textureInfo = new()
 };
 
 Texture texture0 = device.CreateTexture(in textureInfo, result0.Data);
-Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);
+Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);*/
 
 Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
 Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
 
-textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
+/*textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
 Texture texture1 = device.CreateTexture(in textureInfo, result1.Data);
 
 cl.Begin();
@@ -170,7 +170,7 @@ device.ExecuteCommandList(cl);
 
 transferBuffer.Dispose();*/
 
-string shader = File.ReadAllText("SimpleShader.hlsl");
+string shader = File.ReadAllText("Shader.hlsl");
 
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
@@ -198,12 +198,12 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
     VertexShader = vertexShader,
     PixelShader = pixelShader,
     ColorTargets = [new ColorTargetInfo(Format.B8G8R8A8_UNorm)],
-    /*InputLayout =
+    InputLayout =
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
-    Descriptors = [textureLayout, transformLayout]*/
+    //Descriptors = [textureLayout, transformLayout]
 });
 
 pixelShader.Dispose();
@@ -240,13 +240,13 @@ while (alive)
     cl.SetGraphicsPipeline(pipeline);
     
     /*cl.SetDescriptorSet(0, pipeline, textureSet);
-    cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
+    cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));*/
     
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
     
-    cl.DrawIndexed(6);*/
-    cl.Draw(6);
+    cl.DrawIndexed(6);
+    //cl.Draw(6);
     
     cl.EndRenderPass();
     cl.End();
