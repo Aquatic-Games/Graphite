@@ -218,7 +218,24 @@ public static unsafe class Compiler
 
             CompilerOptions* options;
             CheckResult(_spirv.CompilerCreateCompilerOptions(compiler, &options), "Create compiler options");
-            CheckResult(_spirv.CompilerOptionsSetUint(options, CompilerOption.HlslShaderModel, 50), "Set shader model");
+
+            switch (spvBackend)
+            {
+                case SpvBackend.Hlsl:
+                {
+                    CheckResult(_spirv.CompilerOptionsSetUint(options, CompilerOption.HlslShaderModel, 50), "Set shader model");
+                    break;
+                }
+                case SpvBackend.Glsl:
+                {
+                    CheckResult(_spirv.CompilerOptionsSetUint(options, CompilerOption.GlslVersion, 430), "Set GLSL version");
+                    break;
+                }
+                
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
             CheckResult(_spirv.CompilerInstallCompilerOptions(compiler, options), "Install compiler options");
 
             ExecutionModel model = stage switch
@@ -277,6 +294,16 @@ public static unsafe class Compiler
 
                 mapping.VertexInput = vertexInput;
                 return CompileDXBC(compiled, "main", stage);
+            }
+
+            if (backend == GrBackend.OpenGL)
+            {
+                nuint length = strlen(compiled);
+                byte[] glslBytes = new byte[length];
+                fixed (byte* pGlsl = glslBytes)
+                    Unsafe.CopyBlock(pGlsl, compiled, (uint) length);
+
+                return glslBytes;
             }
         }
         finally

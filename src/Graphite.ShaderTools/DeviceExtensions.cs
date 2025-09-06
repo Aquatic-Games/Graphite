@@ -18,7 +18,7 @@ public static class DeviceExtensions
         byte[] compiled = Compiler.CompileHLSL(device.Backend, stage, hlsl, entryPoint, out ShaderMappingInfo mapping,
             includeDir, debug);
 
-        return device.CreateShaderModule(compiled, entryPoint, mapping);
+        return device.CreateShaderModule(stage, compiled, entryPoint, mapping);
     }
     
     /// <summary>
@@ -35,6 +35,6 @@ public static class DeviceExtensions
         byte[] compiled =
             Compiler.TranspileSpirv(device.Backend, spirv, stage, entryPoint, out ShaderMappingInfo mapping);
 
-        return device.CreateShaderModule(compiled, entryPoint, mapping);
+        return device.CreateShaderModule(stage, compiled, entryPoint, mapping);
     }
 }
