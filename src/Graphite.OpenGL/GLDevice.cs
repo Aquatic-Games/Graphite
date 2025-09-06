@@ -39,7 +39,7 @@ internal sealed class GLDevice : Device
     
     public override Pipeline CreateGraphicsPipeline(in GraphicsPipelineInfo info)
     {
-        throw new NotImplementedException();
+        return new GLPipeline(_gl, in info);
     }
     
     public override unsafe Buffer CreateBuffer(in BufferInfo info, void* data)

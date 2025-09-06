@@ -191,20 +191,20 @@ DescriptorLayout transformLayout = device.CreateDescriptorLayout(new DescriptorL
 {
     Bindings = [new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex)],
     PushDescriptor = true
-});
+});*/
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
     VertexShader = vertexShader,
     PixelShader = pixelShader,
     ColorTargets = [new ColorTargetInfo(Format.B8G8R8A8_UNorm)],
-    InputLayout =
+    /*InputLayout =
     [
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
-    Descriptors = [textureLayout, transformLayout]
-});*/
+    Descriptors = [textureLayout, transformLayout]*/
+});
 
 pixelShader.Dispose();
 vertexShader.Dispose();
@@ -255,8 +255,8 @@ while (alive)
     swapchain.Present();
 }
 
-/*pipeline.Dispose();
-transformLayout.Dispose();
+pipeline.Dispose();
+/*transformLayout.Dispose();
 textureSet.Dispose();
 textureLayout.Dispose();
 sampler.Dispose();
