@@ -132,6 +132,7 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void SetGraphicsPipeline(Pipeline pipeline)
     {
+        // TODO: Optimize this by only setting these values if the pipeline changes. Otherwise, return.
         D3D11Pipeline d3dPipeline = (D3D11Pipeline) pipeline;
 
         _context->VSSetShader(d3dPipeline.VertexShader, null, 0);
@@ -139,6 +140,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
 
         if (d3dPipeline.InputLayout != null)
             _context->IASetInputLayout(d3dPipeline.InputLayout);
+
+        _context->OMSetBlendState(d3dPipeline.BlendState, null, uint.MaxValue);
 
         // TODO: Primitive topology
         _context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

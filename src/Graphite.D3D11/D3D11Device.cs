@@ -103,9 +103,11 @@ internal sealed unsafe class D3D11Device : Device
             Unsafe.CopyBlock(mapped.pData, pData, size);
             _context->Unmap((ID3D11Resource*) d3dBuffer.Buffer, 0);
         }
-        
-        D3D11_BOX box = new D3D11_BOX((int) offset, 0, 0, (int) (offset + size), 1, 1);
-        _context->UpdateSubresource((ID3D11Resource*) d3dBuffer.Buffer, 0, &box, pData, 0, 0);
+        else
+        {
+            D3D11_BOX box = new D3D11_BOX((int) offset, 0, 0, (int) (offset + size), 1, 1);
+            _context->UpdateSubresource((ID3D11Resource*) d3dBuffer.Buffer, 0, &box, pData, 0, 0);
+        }
     }
 
     public override void UpdateTexture(Texture texture, in Region3D region, void* pData)
