@@ -171,6 +171,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
             _context->IASetInputLayout(d3dPipeline.InputLayout);
 
         _context->OMSetBlendState(d3dPipeline.BlendState, null, uint.MaxValue);
+        _context->OMSetDepthStencilState(d3dPipeline.DepthStencilState, 0);
+        _context->RSSetState(d3dPipeline.RasterizerState);
 
         // TODO: Primitive topology
         _context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

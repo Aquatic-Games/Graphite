@@ -5,6 +5,8 @@ using System.Text;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
 using static TerraFX.Interop.DirectX.D3D11_COLOR_WRITE_ENABLE;
+using static TerraFX.Interop.DirectX.D3D11_CULL_MODE;
+using static TerraFX.Interop.DirectX.D3D11_FILL_MODE;
 
 namespace Graphite.D3D11;
 
@@ -15,7 +17,10 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
     public readonly ID3D11PixelShader* PixelShader;
 
     public readonly ID3D11InputLayout* InputLayout;
+    
     public readonly ID3D11BlendState* BlendState;
+    public readonly ID3D11DepthStencilState* DepthStencilState;
+    public readonly ID3D11RasterizerState* RasterizerState;
 
     public readonly Dictionary<uint, Dictionary<uint, uint>>? VertexDescriptors;
     public readonly Dictionary<uint, Dictionary<uint, uint>>? PixelDescriptors;
@@ -125,10 +130,32 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
         GraphiteLog.Log("Creating blend state.");
         fixed (ID3D11BlendState** blendState = &BlendState)
             device->CreateBlendState(&blendDesc, blendState).Check("Create blend state");
+
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc = new()
+        {
+            DepthEnable = false
+        };
+
+        GraphiteLog.Log("Creating depth-stencil state.");
+        fixed (ID3D11DepthStencilState** depthStencilState = &DepthStencilState)
+            device->CreateDepthStencilState(&depthStencilDesc, depthStencilState).Check("Create depth-stencil state");
+
+        D3D11_RASTERIZER_DESC rasterizerDesc = new()
+        {
+            CullMode = D3D11_CULL_NONE,
+            FillMode = D3D11_FILL_SOLID,
+            ScissorEnable = true
+        };
+        
+        GraphiteLog.Log("Creating rasterizer state.");
+        fixed (ID3D11RasterizerState** rasterizerState = &RasterizerState)
+            device->CreateRasterizerState(&rasterizerDesc, rasterizerState).Check("Create rasterizer state");
     }
     
     public override void Dispose()
     {
+        RasterizerState->Release();
+        DepthStencilState->Release();
         BlendState->Release();
         
         if (InputLayout != null)
