@@ -3,9 +3,12 @@ global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
 global using VkFilter = Silk.NET.Vulkan.Filter;
 global using VkBlendFactor = Silk.NET.Vulkan.BlendFactor;
 global using VkBlendOp = Silk.NET.Vulkan.BlendOp;
+global using VkOffset2D = Silk.NET.Vulkan.Offset2D;
+global using VkOffset3D = Silk.NET.Vulkan.Offset3D;
 using Graphite.Core;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
+using Offset2D = Graphite.Core.Offset2D;
 using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
@@ -193,9 +196,18 @@ internal static class VulkanUtils
         };
     }
 
-    public static Silk.NET.Vulkan.Offset3D ToVk(this Offset3D offset)
+    public static VkOffset2D ToVk(this Offset2D offset)
     {
-        return new Silk.NET.Vulkan.Offset3D
+        return new VkOffset2D
+        {
+            X = offset.X,
+            Y = offset.Y,
+        };
+    }
+    
+    public static VkOffset3D ToVk(this Offset3D offset)
+    {
+        return new VkOffset3D
         {
             X = offset.X,
             Y = offset.Y,
@@ -203,6 +215,15 @@ internal static class VulkanUtils
         };
     }
 
+    public static Extent2D ToVk(this Size2D size)
+    {
+        return new Extent2D
+        {
+            Width = size.Width,
+            Height = size.Height,
+        };
+    }
+    
     public static Extent3D ToVk(this Size3D size)
     {
         return new Extent3D

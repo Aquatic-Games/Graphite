@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
+using TerraFX.Interop.Windows;
 using static TerraFX.Interop.DirectX.D3D_PRIMITIVE_TOPOLOGY;
 using ColorF = Graphite.Core.ColorF;
 
@@ -91,6 +92,34 @@ internal sealed unsafe class D3D11CommandList : CommandList
     {
         D3D11Texture d3dTexture = (D3D11Texture) texture;
         _context->GenerateMips(d3dTexture.ResourceView);
+    }
+
+    public override void SetViewport(in Viewport viewport)
+    {
+        D3D11_VIEWPORT vp = new()
+        {
+            TopLeftX = viewport.X,
+            TopLeftY = viewport.Y,
+            Width = viewport.Width,
+            Height = viewport.Height,
+            MinDepth = viewport.MinDepth,
+            MaxDepth = viewport.MaxDepth
+        };
+
+        _context->RSSetViewports(1, &vp);
+    }
+
+    public override void SetScissor(in Rect2D region)
+    {
+        RECT scissor = new()
+        {
+            left = region.X,
+            top = region.Y,
+            right = (int) (region.X + region.Width),
+            bottom = (int) (region.Y + region.Height)
+        };
+
+        _context->RSSetScissorRects(1, &scissor);
     }
 
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
