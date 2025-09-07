@@ -128,14 +128,23 @@ internal sealed unsafe class VulkanPipeline : Pipeline
 
         for (int i = 0; i < info.ColorTargets.Length; i++)
         {
+            ref readonly ColorTargetInfo target = ref info.ColorTargets[i];
+            ref readonly BlendStateDescription state = ref target.BlendState;
+            
             blendAttachments[i] = new PipelineColorBlendAttachmentState
             {
-                BlendEnable = false,
+                BlendEnable = state.EnableBlending,
+                SrcColorBlendFactor = state.SrcColorFactor.ToVk(),
+                DstColorBlendFactor = state.DestColorFactor.ToVk(),
+                ColorBlendOp = state.ColorBlendOp.ToVk(),
+                SrcAlphaBlendFactor = state.SrcAlphaFactor.ToVk(),
+                DstAlphaBlendFactor = state.DestAlphaFactor.ToVk(),
+                AlphaBlendOp = state.AlphaBlendOp.ToVk(),
                 ColorWriteMask = ColorComponentFlags.RBit | ColorComponentFlags.GBit | ColorComponentFlags.BBit |
                                  ColorComponentFlags.ABit
             };
 
-            formats[i] = info.ColorTargets[i].Format.ToVk();
+            formats[i] = target.Format.ToVk();
         }
 
         PipelineColorBlendStateCreateInfo colorBlendState = new()

@@ -1,6 +1,8 @@
 global using VkFormat = Silk.NET.Vulkan.Format;
 global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
 global using VkFilter = Silk.NET.Vulkan.Filter;
+global using VkBlendFactor = Silk.NET.Vulkan.BlendFactor;
+global using VkBlendOp = Silk.NET.Vulkan.BlendOp;
 using Graphite.Core;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
@@ -157,6 +159,37 @@ internal static class VulkanUtils
             AddressMode.ClampToEdge => SamplerAddressMode.ClampToEdge,
             AddressMode.ClampToBorder => SamplerAddressMode.ClampToBorder,
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
+        };
+    }
+
+    public static VkBlendFactor ToVk(this BlendFactor factor)
+    {
+        return factor switch
+        {
+            BlendFactor.Zero => VkBlendFactor.Zero,
+            BlendFactor.One => VkBlendFactor.One,
+            BlendFactor.SrcColor => VkBlendFactor.SrcColor,
+            BlendFactor.OneMinusSrcColor => VkBlendFactor.OneMinusSrcColor,
+            BlendFactor.DestColor => VkBlendFactor.DstColor,
+            BlendFactor.OneMinusDestColor => VkBlendFactor.OneMinusDstColor,
+            BlendFactor.SrcAlpha => VkBlendFactor.SrcAlpha,
+            BlendFactor.OneMinusSrcAlpha => VkBlendFactor.OneMinusSrcAlpha,
+            BlendFactor.DestAlpha => VkBlendFactor.DstAlpha,
+            BlendFactor.OneMinusDestAlpha => VkBlendFactor.OneMinusDstAlpha,
+            _ => throw new ArgumentOutOfRangeException(nameof(factor), factor, null)
+        };
+    }
+
+    public static VkBlendOp ToVk(this BlendOp op)
+    {
+        return op switch
+        {
+            BlendOp.Add => VkBlendOp.Add,
+            BlendOp.Subtract => VkBlendOp.Subtract,
+            BlendOp.ReverseSubtract => VkBlendOp.ReverseSubtract,
+            BlendOp.Min => VkBlendOp.Min,
+            BlendOp.Max => VkBlendOp.Max,
+            _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
         };
     }
 
