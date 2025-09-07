@@ -141,17 +141,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
         _context->OMSetRenderTargets((uint) colorAttachments.Length, targets, null);
 
         Size2D size = (Size2D) ((D3D11Texture) colorAttachments[0].Texture).Info.Size;
-
-        D3D11_VIEWPORT viewport = new()
-        {
-            TopLeftX = 0,
-            TopLeftY = 0,
-            Width = size.Width,
-            Height = size.Height,
-            MinDepth = 0,
-            MaxDepth = 1
-        };
-        _context->RSSetViewports(1, &viewport);
+        SetViewport(new Viewport(0, 0, size.Width, size.Height));
+        SetScissor(new Rect2D(0, 0, size.Width, size.Height));
     }
 
     public override void EndRenderPass()
