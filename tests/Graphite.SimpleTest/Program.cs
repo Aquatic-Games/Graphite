@@ -1,9 +1,11 @@
 ﻿using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Graphite;
 using Graphite.Core;
 using Graphite.D3D11;
+using Graphite.OpenGL;
 using Graphite.ShaderTools;
 using Graphite.Vulkan;
 using SDL3;
@@ -18,19 +20,34 @@ GraphiteLog.LogMessage += (severity, type, message, _, _) =>
 if (!SDL.Init(SDL.InitFlags.Video | SDL.InitFlags.Events))
     throw new Exception($"Failed to initialize SDL: {SDL.GetError()}");
 
-Instance.RegisterBackend<D3D11Backend>();
+Instance.RegisterBackend<OpenGLBackend>();
+//Instance.RegisterBackend<D3D11Backend>();
 Instance.RegisterBackend<VulkanBackend>();
-
-Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));
-Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 const int width = 800;
 const int height = 600;
 
-// Note: The Vulkan flag is here for DXVK support. This flag does not ordinarily need to be passed to CreateWindow.
-IntPtr window = SDL.CreateWindow($"Graphite.SimpleTest - {instance.BackendName}", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.Vulkan);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMajorVersion, OpenGLBackend.MajorVersion);
+SDL.GLSetAttribute(SDL.GLAttr.ContextMinorVersion, OpenGLBackend.MinorVersion);
+SDL.GLSetAttribute(SDL.GLAttr.ContextProfileMask, (int) SDL.GLProfile.Core);
+
+IntPtr window = SDL.CreateWindow($"Graphite.SimpleTest", width, height, SDL.WindowFlags.Resizable | SDL.WindowFlags.OpenGL);
 if (window == IntPtr.Zero)
     throw new Exception($"Failed to create window: {SDL.GetError()}");
+
+IntPtr context = SDL.GLCreateContext(window);
+SDL.GLMakeCurrent(window, context);
+
+OpenGLBackend.Context = new GLContext(s => Marshal.GetFunctionPointerForDelegate(SDL.GLGetProcAddress(s)), i =>
+{
+    SDL.GLSetSwapInterval(i);
+    SDL.GLSwapWindow(window);
+});
+
+Instance instance = Instance.Create(new InstanceInfo("Graphite.SimpleTest", true));
+SDL.SetWindowTitle(window, SDL.GetWindowTitle(window) + $" - {instance.BackendName}");
+
+Console.WriteLine($"Adapters: {string.Join(", ", instance.EnumerateAdapters())}");
 
 uint properties = SDL.GetWindowProperties(window);
 SurfaceInfo surfaceInfo;
@@ -84,7 +101,7 @@ ReadOnlySpan<ushort> indices =
     1, 2, 3
 ];
 
-ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
+/*ImageResult result0 = ImageResult.FromMemory(File.ReadAllBytes("DEBUG.png"), ColorComponents.RedGreenBlueAlpha);
 ImageResult result1 = ImageResult.FromMemory(File.ReadAllBytes("Bagel.png"), ColorComponents.RedGreenBlueAlpha);
 
 TextureInfo textureInfo = new()
@@ -97,20 +114,20 @@ TextureInfo textureInfo = new()
 };
 
 Texture texture0 = device.CreateTexture(in textureInfo, result0.Data);
-Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);
+Sampler sampler = device.CreateSampler(SamplerInfo.LinearClamp);*/
 
 Buffer vertexBuffer = device.CreateBuffer(BufferUsage.VertexBuffer, vertices);
 Buffer indexBuffer = device.CreateBuffer(BufferUsage.IndexBuffer, indices);
 Buffer constantBuffer = device.CreateBuffer(BufferUsage.ConstantBuffer | BufferUsage.MapWrite, Matrix4x4.CreateRotationZ(1));
 
-textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
+/*textureInfo.Size = new Size3D((uint) result1.Width, (uint) result1.Height);
 Texture texture1 = device.CreateTexture(in textureInfo, result1.Data);
 
 cl.Begin();
 cl.GenerateMipmaps(texture0);
 cl.GenerateMipmaps(texture1);
 cl.End();
-device.ExecuteCommandList(cl);
+device.ExecuteCommandList(cl);*/
 
 /*uint vertexSize = (uint) vertices.Length * sizeof(float);
 uint indexSize = (uint) indices.Length * sizeof(ushort);
@@ -158,7 +175,7 @@ string shader = File.ReadAllText("Shader.hlsl");
 ShaderModule vertexShader = device.CreateShaderModuleFromHLSL(ShaderStage.Vertex, shader, "VSMain");
 ShaderModule pixelShader = device.CreateShaderModuleFromHLSL(ShaderStage.Pixel, shader, "PSMain");
 
-DescriptorLayout textureLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
+/*DescriptorLayout textureLayout = device.CreateDescriptorLayout(new DescriptorLayoutInfo
 {
     Bindings =
     [
@@ -174,7 +191,7 @@ DescriptorLayout transformLayout = device.CreateDescriptorLayout(new DescriptorL
 {
     Bindings = [new DescriptorBinding(0, DescriptorType.ConstantBuffer, ShaderStage.Vertex)],
     PushDescriptor = true
-});
+});*/
 
 Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
 {
@@ -186,7 +203,7 @@ Pipeline pipeline = device.CreateGraphicsPipeline(new GraphicsPipelineInfo
         new InputElementDescription(Format.R32G32_Float, 0, 0, 0),
         new InputElementDescription(Format.R32G32_Float, 8, 1, 0)
     ],
-    Descriptors = [textureLayout, transformLayout]
+    //Descriptors = [textureLayout, transformLayout]
 });
 
 pixelShader.Dispose();
@@ -209,21 +226,21 @@ while (alive)
 
     Texture swapchainTexture = swapchain.GetNextTexture();
 
-    nint map = device.MapBuffer(constantBuffer);
+    /*nint map = device.MapBuffer(constantBuffer);
     Matrix4x4 matrix = Matrix4x4.CreateRotationZ(value);
     unsafe { Unsafe.CopyBlock((void*) map, Unsafe.AsPointer(ref matrix), 64); }
     device.UnmapBuffer(constantBuffer);
     value += 0.01f;
     if (value >= float.Pi * 2)
-        value -= float.Pi * 2;
+        value -= float.Pi * 2;*/
     
     cl.Begin();
     cl.BeginRenderPass([new ColorAttachmentInfo(swapchainTexture, new ColorF(Color.CornflowerBlue))]);
     
     cl.SetGraphicsPipeline(pipeline);
     
-    cl.SetDescriptorSet(0, pipeline, textureSet);
-    cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));
+    /*cl.SetDescriptorSet(0, pipeline, textureSet);
+    cl.PushDescriptors(1, pipeline, new Descriptor(0, DescriptorType.ConstantBuffer, constantBuffer));*/
     
     cl.SetVertexBuffer(0, vertexBuffer, 4 * sizeof(float));
     cl.SetIndexBuffer(indexBuffer, Format.R16_UInt);
@@ -239,7 +256,7 @@ while (alive)
 }
 
 pipeline.Dispose();
-transformLayout.Dispose();
+/*transformLayout.Dispose();
 textureSet.Dispose();
 textureLayout.Dispose();
 sampler.Dispose();
@@ -247,7 +264,7 @@ texture1.Dispose();
 texture0.Dispose();
 constantBuffer.Dispose();
 indexBuffer.Dispose();
-vertexBuffer.Dispose();
+vertexBuffer.Dispose();*/
 swapchain.Dispose();
 cl.Dispose();
 device.Dispose();

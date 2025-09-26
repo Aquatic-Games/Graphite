@@ -130,7 +130,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
 
         for (uint i = 1; i < vkTexture.MipLevels; i++)
         {
-            ImageBlit blit = new ImageBlit
+            ImageBlit blit = new()
             {
                 SrcSubresource = new ImageSubresourceLayers
                 {
