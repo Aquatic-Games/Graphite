@@ -1,9 +1,14 @@
 global using VkFormat = Silk.NET.Vulkan.Format;
 global using VkDescriptorType = Silk.NET.Vulkan.DescriptorType;
 global using VkFilter = Silk.NET.Vulkan.Filter;
+global using VkBlendFactor = Silk.NET.Vulkan.BlendFactor;
+global using VkBlendOp = Silk.NET.Vulkan.BlendOp;
+global using VkOffset2D = Silk.NET.Vulkan.Offset2D;
+global using VkOffset3D = Silk.NET.Vulkan.Offset3D;
 using Graphite.Core;
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
+using Offset2D = Graphite.Core.Offset2D;
 using Offset3D = Graphite.Core.Offset3D;
 
 namespace Graphite.Vulkan;
@@ -160,9 +165,49 @@ internal static class VulkanUtils
         };
     }
 
-    public static Silk.NET.Vulkan.Offset3D ToVk(this Offset3D offset)
+    public static VkBlendFactor ToVk(this BlendFactor factor)
     {
-        return new Silk.NET.Vulkan.Offset3D
+        return factor switch
+        {
+            BlendFactor.Zero => VkBlendFactor.Zero,
+            BlendFactor.One => VkBlendFactor.One,
+            BlendFactor.SrcColor => VkBlendFactor.SrcColor,
+            BlendFactor.OneMinusSrcColor => VkBlendFactor.OneMinusSrcColor,
+            BlendFactor.DestColor => VkBlendFactor.DstColor,
+            BlendFactor.OneMinusDestColor => VkBlendFactor.OneMinusDstColor,
+            BlendFactor.SrcAlpha => VkBlendFactor.SrcAlpha,
+            BlendFactor.OneMinusSrcAlpha => VkBlendFactor.OneMinusSrcAlpha,
+            BlendFactor.DestAlpha => VkBlendFactor.DstAlpha,
+            BlendFactor.OneMinusDestAlpha => VkBlendFactor.OneMinusDstAlpha,
+            _ => throw new ArgumentOutOfRangeException(nameof(factor), factor, null)
+        };
+    }
+
+    public static VkBlendOp ToVk(this BlendOp op)
+    {
+        return op switch
+        {
+            BlendOp.Add => VkBlendOp.Add,
+            BlendOp.Subtract => VkBlendOp.Subtract,
+            BlendOp.ReverseSubtract => VkBlendOp.ReverseSubtract,
+            BlendOp.Min => VkBlendOp.Min,
+            BlendOp.Max => VkBlendOp.Max,
+            _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+        };
+    }
+
+    public static VkOffset2D ToVk(this Offset2D offset)
+    {
+        return new VkOffset2D
+        {
+            X = offset.X,
+            Y = offset.Y,
+        };
+    }
+    
+    public static VkOffset3D ToVk(this Offset3D offset)
+    {
+        return new VkOffset3D
         {
             X = offset.X,
             Y = offset.Y,
@@ -170,6 +215,15 @@ internal static class VulkanUtils
         };
     }
 
+    public static Extent2D ToVk(this Size2D size)
+    {
+        return new Extent2D
+        {
+            Width = size.Width,
+            Height = size.Height,
+        };
+    }
+    
     public static Extent3D ToVk(this Size3D size)
     {
         return new Extent3D

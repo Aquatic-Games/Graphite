@@ -42,6 +42,11 @@ internal sealed unsafe class VulkanTexture : Texture
             IsSampled = true;
         }
 
+        if ((info.Usage & TextureUsage.ColorTarget) != 0)
+            usage |= ImageUsageFlags.ColorAttachmentBit;
+        if ((info.Usage & TextureUsage.DepthStencilTarget) != 0)
+            usage |= ImageUsageFlags.DepthStencilAttachmentBit;
+
         if ((info.Usage & TextureUsage.GenerateMips) != 0)
             usage |= ImageUsageFlags.TransferSrcBit;
 

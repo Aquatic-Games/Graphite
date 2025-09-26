@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Graphite.Core;
 using TerraFX.Interop.DirectX;
+using TerraFX.Interop.Windows;
 using static TerraFX.Interop.DirectX.D3D_PRIMITIVE_TOPOLOGY;
 using ColorF = Graphite.Core.ColorF;
 
@@ -93,6 +94,34 @@ internal sealed unsafe class D3D11CommandList : CommandList
         _context->GenerateMips(d3dTexture.ResourceView);
     }
 
+    public override void SetViewport(in Viewport viewport)
+    {
+        D3D11_VIEWPORT vp = new()
+        {
+            TopLeftX = viewport.X,
+            TopLeftY = viewport.Y,
+            Width = viewport.Width,
+            Height = viewport.Height,
+            MinDepth = viewport.MinDepth,
+            MaxDepth = viewport.MaxDepth
+        };
+
+        _context->RSSetViewports(1, &vp);
+    }
+
+    public override void SetScissor(in Rect2D region)
+    {
+        RECT scissor = new()
+        {
+            left = region.X,
+            top = region.Y,
+            right = (int) (region.X + region.Width),
+            bottom = (int) (region.Y + region.Height)
+        };
+
+        _context->RSSetScissorRects(1, &scissor);
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         ID3D11RenderTargetView** targets = stackalloc ID3D11RenderTargetView*[colorAttachments.Length];
@@ -112,17 +141,8 @@ internal sealed unsafe class D3D11CommandList : CommandList
         _context->OMSetRenderTargets((uint) colorAttachments.Length, targets, null);
 
         Size2D size = (Size2D) ((D3D11Texture) colorAttachments[0].Texture).Info.Size;
-
-        D3D11_VIEWPORT viewport = new()
-        {
-            TopLeftX = 0,
-            TopLeftY = 0,
-            Width = size.Width,
-            Height = size.Height,
-            MinDepth = 0,
-            MaxDepth = 1
-        };
-        _context->RSSetViewports(1, &viewport);
+        SetViewport(new Viewport(0, 0, size.Width, size.Height));
+        SetScissor(new Rect2D(0, 0, size.Width, size.Height));
     }
 
     public override void EndRenderPass()
@@ -132,6 +152,7 @@ internal sealed unsafe class D3D11CommandList : CommandList
     
     public override void SetGraphicsPipeline(Pipeline pipeline)
     {
+        // TODO: Optimize this by only setting these values if the pipeline changes. Otherwise, return.
         D3D11Pipeline d3dPipeline = (D3D11Pipeline) pipeline;
 
         _context->VSSetShader(d3dPipeline.VertexShader, null, 0);
@@ -139,6 +160,10 @@ internal sealed unsafe class D3D11CommandList : CommandList
 
         if (d3dPipeline.InputLayout != null)
             _context->IASetInputLayout(d3dPipeline.InputLayout);
+
+        _context->OMSetBlendState(d3dPipeline.BlendState, null, uint.MaxValue);
+        _context->OMSetDepthStencilState(d3dPipeline.DepthStencilState, 0);
+        _context->RSSetState(d3dPipeline.RasterizerState);
 
         // TODO: Primitive topology
         _context->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

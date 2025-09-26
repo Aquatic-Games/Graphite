@@ -42,6 +42,18 @@ public abstract class CommandList : IDisposable
     public abstract void GenerateMipmaps(Texture texture);
 
     /// <summary>
+    /// Set the viewport to use on next draw.
+    /// </summary>
+    /// <param name="viewport">The <see cref="Viewport"/>.</param>
+    public abstract void SetViewport(in Viewport viewport);
+
+    /// <summary>
+    /// Set the scissor rectangle to use on next draw.
+    /// </summary>
+    /// <param name="region">The scissor rectangle.</param>
+    public abstract void SetScissor(in Rect2D region);
+
+    /// <summary>
     /// Begin a render pass with the given color attachments.
     /// </summary>
     /// <param name="colorAttachments">The color attachments that will be used in this render pass.</param>

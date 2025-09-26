@@ -7,5 +7,9 @@ public enum TextureUsage
     
     ShaderResource = 1 << 0,
     
-    GenerateMips = 1 << 1
+    ColorTarget = 1 << 1,
+    
+    DepthStencilTarget = 1 << 2,
+    
+    GenerateMips = 1 << 16,
 }

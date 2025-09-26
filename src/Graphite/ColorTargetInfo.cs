@@ -4,8 +4,11 @@ public struct ColorTargetInfo
 {
     public Format Format;
 
-    public ColorTargetInfo(Format format)
+    public BlendStateDescription BlendState;
+
+    public ColorTargetInfo(Format format, BlendStateDescription blendState = default)
     {
         Format = format;
+        BlendState = blendState;
     }
 }

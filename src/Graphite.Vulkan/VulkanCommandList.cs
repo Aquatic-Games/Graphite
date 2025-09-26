@@ -1,7 +1,8 @@
 using Graphite.Core;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
-using Offset3D = Graphite.Core.Offset3D;
+using Rect2D = Graphite.Core.Rect2D;
+using Viewport = Graphite.Core.Viewport;
 
 namespace Graphite.Vulkan;
 
@@ -12,7 +13,7 @@ internal sealed unsafe class VulkanCommandList : CommandList
     private readonly CommandPool _pool;
 
     private readonly KhrPushDescriptor? _pushDescriptor;
-
+    
     private VulkanTexture? _swapchainTexture;
     
     public readonly CommandBuffer Buffer;
@@ -171,6 +172,33 @@ internal sealed unsafe class VulkanCommandList : CommandList
             PipelineStageFlags.AllGraphicsBit, mipLevels: vkTexture.MipLevels);
     }
 
+    public override void SetViewport(in Viewport viewport)
+    {
+        // Vulkan requires a reverse viewport
+        Silk.NET.Vulkan.Viewport vp = new()
+        {
+            X = viewport.X,
+            Y = viewport.Height + viewport.Y,
+            Width = viewport.Width,
+            Height = -viewport.Height,
+            MinDepth = viewport.MinDepth,
+            MaxDepth = viewport.MaxDepth
+        };
+
+        _vk.CmdSetViewport(Buffer, 0, 1, &vp);
+    }
+
+    public override void SetScissor(in Rect2D region)
+    {
+        Silk.NET.Vulkan.Rect2D scissor = new()
+        {
+            Offset = region.Offset.ToVk(),
+            Extent = region.Size.ToVk()
+        };
+        
+        _vk.CmdSetScissor(Buffer, 0, 1, &scissor);
+    }
+
     public override void BeginRenderPass(in ReadOnlySpan<ColorAttachmentInfo> colorAttachments)
     {
         RenderingAttachmentInfo* colorRenderingAttachments = stackalloc RenderingAttachmentInfo[colorAttachments.Length];
@@ -204,19 +232,14 @@ internal sealed unsafe class VulkanCommandList : CommandList
             SType = StructureType.RenderingInfo,
             ColorAttachmentCount = (uint) colorAttachments.Length,
             PColorAttachments = colorRenderingAttachments,
-            RenderArea = new Rect2D(new Offset2D(0, 0), new Extent2D(attachmentSize.Width, attachmentSize.Height)),
+            RenderArea = new Silk.NET.Vulkan.Rect2D(new VkOffset2D(0, 0), new Extent2D(attachmentSize.Width, attachmentSize.Height)),
             LayerCount = 1
         };
         
         _vk.CmdBeginRendering(Buffer, &renderingInfo);
 
-        // Vulkan requires a reverse viewport
-        // TODO: SetViewport method.
-        Viewport viewport = new Viewport(0, attachmentSize.Height, attachmentSize.Width, -attachmentSize.Height, 0, 1);
-        _vk.CmdSetViewport(Buffer, 0, 1, &viewport);
-
-        Rect2D scissor = renderingInfo.RenderArea;
-        _vk.CmdSetScissor(Buffer, 0, 1, &scissor);
+        SetViewport(new Viewport(0, 0, attachmentSize.Width, attachmentSize.Height));
+        SetScissor(new Rect2D(0, 0, attachmentSize.Width, attachmentSize.Height));
     }
     
     public override void EndRenderPass()

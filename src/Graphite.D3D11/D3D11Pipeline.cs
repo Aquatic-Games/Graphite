@@ -2,7 +2,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
+using Graphite.Core;
 using TerraFX.Interop.DirectX;
+using static TerraFX.Interop.DirectX.D3D11_COLOR_WRITE_ENABLE;
+using static TerraFX.Interop.DirectX.D3D11_CULL_MODE;
+using static TerraFX.Interop.DirectX.D3D11_FILL_MODE;
 
 namespace Graphite.D3D11;
 
@@ -13,6 +17,10 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
     public readonly ID3D11PixelShader* PixelShader;
 
     public readonly ID3D11InputLayout* InputLayout;
+    
+    public readonly ID3D11BlendState* BlendState;
+    public readonly ID3D11DepthStencilState* DepthStencilState;
+    public readonly ID3D11RasterizerState* RasterizerState;
 
     public readonly Dictionary<uint, Dictionary<uint, uint>>? VertexDescriptors;
     public readonly Dictionary<uint, Dictionary<uint, uint>>? PixelDescriptors;
@@ -93,10 +101,63 @@ internal sealed unsafe class D3D11Pipeline : Pipeline
             for (int i = 0; i < numInputElements; i++)
                 handles[i].Free();
         }
+
+        D3D11_BLEND_DESC blendDesc = new()
+        {
+            IndependentBlendEnable = true
+        };
+        
+        // D3D11 spec shows that the maximum number of blend attachments (and therefore color targets) is 8.
+        Debug.Assert(info.ColorTargets.Length > 0 && info.ColorTargets.Length < 8);
+
+        for (int i = 0; i < info.ColorTargets.Length; i++)
+        {
+            ref readonly BlendStateDescription state = ref info.ColorTargets[i].BlendState;
+
+            blendDesc.RenderTarget[i] = new D3D11_RENDER_TARGET_BLEND_DESC
+            {
+                BlendEnable = state.EnableBlending,
+                SrcBlend = state.SrcColorFactor.ToD3D(),
+                DestBlend = state.DestColorFactor.ToD3D(),
+                BlendOp = state.ColorBlendOp.ToD3D(),
+                SrcBlendAlpha = state.SrcAlphaFactor.ToD3D(),
+                DestBlendAlpha = state.DestAlphaFactor.ToD3D(),
+                BlendOpAlpha = state.AlphaBlendOp.ToD3D(),
+                RenderTargetWriteMask = (byte) D3D11_COLOR_WRITE_ENABLE_ALL
+            };
+        }
+        
+        GraphiteLog.Log("Creating blend state.");
+        fixed (ID3D11BlendState** blendState = &BlendState)
+            device->CreateBlendState(&blendDesc, blendState).Check("Create blend state");
+
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc = new()
+        {
+            DepthEnable = false
+        };
+
+        GraphiteLog.Log("Creating depth-stencil state.");
+        fixed (ID3D11DepthStencilState** depthStencilState = &DepthStencilState)
+            device->CreateDepthStencilState(&depthStencilDesc, depthStencilState).Check("Create depth-stencil state");
+
+        D3D11_RASTERIZER_DESC rasterizerDesc = new()
+        {
+            CullMode = D3D11_CULL_NONE,
+            FillMode = D3D11_FILL_SOLID,
+            ScissorEnable = true
+        };
+        
+        GraphiteLog.Log("Creating rasterizer state.");
+        fixed (ID3D11RasterizerState** rasterizerState = &RasterizerState)
+            device->CreateRasterizerState(&rasterizerDesc, rasterizerState).Check("Create rasterizer state");
     }
     
     public override void Dispose()
     {
+        RasterizerState->Release();
+        DepthStencilState->Release();
+        BlendState->Release();
+        
         if (InputLayout != null)
             InputLayout->Release();
         
