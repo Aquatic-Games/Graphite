@@ -21,6 +21,14 @@ public abstract class Instance : IDisposable
     public abstract Adapter[] EnumerateAdapters();
 
     /// <summary>
+    /// Create a <see cref="Device"/>.
+    /// </summary>
+    /// <param name="surface">The <see cref="Surface"/> to use when creating the device.</param>
+    /// <param name="adapter">The <see cref="Adapter"/> to use, if any. If none is provided, then the default adapter is used.</param>
+    /// <returns>The created <see cref="Device"/>.</returns>
+    public abstract Device CreateDevice(Surface surface, Adapter? adapter = null);
+
+    /// <summary>
     /// Create a <see cref="Surface"/> from the given <see cref="SurfaceInfo"/>.
     /// </summary>
     /// <param name="info">The <see cref="SurfaceInfo"/> that describes how the surface is created.</param>

@@ -112,6 +112,24 @@ public sealed unsafe class VulkanInstance : Instance
         return adapters.ToArray();
     }
 
+    public override Device CreateDevice(Surface surface, Adapter? adapter = null)
+    {
+        if (adapter is not { } adapterToUse)
+        {
+            Adapter[] adapters = EnumerateAdapters();
+
+            if (adapters.Length == 0)
+                throw new PlatformNotSupportedException("No supported adapters.");
+            
+            adapterToUse = adapters[0];
+        }
+        
+        Instance.Log(LogSeverity.Info, $"Using adapter: {adapterToUse}");
+
+        PhysicalDevice physicalDevice = new PhysicalDevice(adapterToUse.Handle);
+        return new VulkanDevice(_vk, _instance, (VulkanSurface) surface, physicalDevice);
+    }
+
     /// <inheritdoc />
     public override Surface CreateSurface(in SurfaceInfo info)
     {

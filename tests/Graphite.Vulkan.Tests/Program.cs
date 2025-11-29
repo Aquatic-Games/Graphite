@@ -35,11 +35,14 @@ public unsafe class Program
         {
             SysWMType.Windows => new SurfaceInfo(SurfaceType.Win32, wmInfo.Info.Win.HInstance, wmInfo.Info.Win.Hwnd),
             SysWMType.Wayland => new SurfaceInfo(SurfaceType.Wayland, (nint) wmInfo.Info.Wayland.Display, (nint) wmInfo.Info.Wayland.Surface),
-            SysWMType.X11 => new SurfaceInfo(SurfaceType.Xlib, (nint) wmInfo.Info.X11.Display, (nint) wmInfo.Info.X11.Window)
+            SysWMType.X11 => new SurfaceInfo(SurfaceType.Xlib, (nint) wmInfo.Info.X11.Display, (nint) wmInfo.Info.X11.Window),
+            _ => throw new PlatformNotSupportedException()
         };
 
         Surface surface = instance.CreateSurface(in surfaceInfo);
-
+        Device device = instance.CreateDevice(surface);
+        
+        device.Dispose();
         surface.Dispose();
         instance.Dispose();
         sdl.DestroyWindow(window);
