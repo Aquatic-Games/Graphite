@@ -4,11 +4,11 @@ public record struct InstanceInfo
 {
     public string AppName;
 
-    public bool Debug;
+    //public bool Debug;
 
-    public InstanceInfo(string appName, bool debug)
+    public InstanceInfo(string appName/*, bool debug*/)
     {
         AppName = appName;
-        Debug = debug;
+        //Debug = debug;
     }
 }

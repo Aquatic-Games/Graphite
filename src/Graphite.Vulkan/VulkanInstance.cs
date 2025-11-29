@@ -7,6 +7,8 @@ namespace Graphite.Vulkan;
 
 public unsafe class VulkanInstance : Instance
 {
+    private static readonly Version32 Version = Vk.Version13;
+    
     /// <inheritdoc />
     public override bool IsDisposed { get; protected set; }
 
@@ -18,14 +20,15 @@ public unsafe class VulkanInstance : Instance
         _vk = Vk.GetApi();
         Instance.Log($"InstanceInfo: {info}");
 
-        uint availableVersion;
-        _vk.EnumerateInstanceVersion(&availableVersion).Check("Enumerate instance version");
-
-        if (availableVersion < Vk.Version13)
+        uint availableVersionInt;
+        _vk.EnumerateInstanceVersion(&availableVersionInt).Check("Enumerate instance version");
+        Version32 availableVersion = (Version32) availableVersionInt;
+        Instance.Log($"Available Vulkan version: {availableVersion.Major}.{availableVersion.Minor}");
+        
+        if (availableVersion < Version)
         {
-            Version32 version = (Version32) availableVersion;
             throw new PlatformNotSupportedException(
-                $"Vulkan 1.3 not supported. (Available version: {version.Major}.{version.Minor}.)");
+                $"Vulkan 1.3 not supported. (Available version: {availableVersion.Major}.{availableVersion.Minor})");
         }
 
         nint pAppName = SilkMarshal.StringToPtr(info.AppName);
@@ -36,7 +39,7 @@ public unsafe class VulkanInstance : Instance
             SType = StructureType.ApplicationInfo,
             PApplicationName = (byte*) pAppName,
             PEngineName = (byte*) pEngineName,
-            ApiVersion = Vk.Version13
+            ApiVersion = Version
         };
 
         // KHR_surface is basically guaranteed to be supported by all Vulkan implementations.
@@ -81,6 +84,32 @@ public unsafe class VulkanInstance : Instance
         SilkMarshal.Free(pInstanceExtensions);
         SilkMarshal.FreeString(pEngineName);
         SilkMarshal.FreeString(pAppName);
+    }
+
+    public override Adapter[] EnumerateAdapters()
+    {
+        uint numPhysicalDevices;
+        _vk.EnumeratePhysicalDevices(_instance, &numPhysicalDevices, null);
+        PhysicalDevice* physicalDevices = stackalloc PhysicalDevice[(int) numPhysicalDevices];
+        _vk.EnumeratePhysicalDevices(_instance, &numPhysicalDevices, physicalDevices);
+
+        List<Adapter> adapters = [];
+        for (uint i = 0; i < numPhysicalDevices; i++)
+        {
+            PhysicalDevice device = physicalDevices[i];
+            
+            PhysicalDeviceProperties properties;
+            _vk.GetPhysicalDeviceProperties(device, &properties);
+            
+            if (properties.ApiVersion < Version)
+                continue;
+
+            string name = new string((sbyte*) properties.DeviceName);
+            
+            adapters.Add(new Adapter(device.Handle, i, name));
+        }
+
+        return adapters.ToArray();
     }
 
     /// <inheritdoc />

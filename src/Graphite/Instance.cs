@@ -15,6 +15,12 @@ public abstract class Instance : IDisposable
     public abstract bool IsDisposed { get; protected set; }
 
     /// <summary>
+    /// Enumerates the supported <see cref="Adapter"/>s that can be used to create a <see cref="Device"/>.
+    /// </summary>
+    /// <returns>The supported adapters.</returns>
+    public abstract Adapter[] EnumerateAdapters();
+
+    /// <summary>
     /// Dispose of this instance.
     /// </summary>
     public abstract void Dispose();
