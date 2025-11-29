@@ -5,7 +5,7 @@ using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Graphite.Vulkan;
 
-public unsafe class VulkanInstance : Instance
+public sealed unsafe class VulkanInstance : Instance
 {
     private static readonly Version32 Version = Vk.Version13;
     
@@ -110,6 +110,12 @@ public unsafe class VulkanInstance : Instance
         }
 
         return adapters.ToArray();
+    }
+
+    /// <inheritdoc />
+    public override Surface CreateSurface(in SurfaceInfo info)
+    {
+        return new VulkanSurface(_vk, _instance, in info);
     }
 
     /// <inheritdoc />
