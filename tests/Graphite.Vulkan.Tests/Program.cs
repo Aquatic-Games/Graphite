@@ -41,6 +41,29 @@ public unsafe class Program
 
         Surface surface = instance.CreateSurface(in surfaceInfo);
         Device device = instance.CreateDevice(surface);
+
+        bool alive = true;
+        while (alive)
+        {
+            Event winEvent;
+            while (sdl.PollEvent(&winEvent) != 0)
+            {
+                switch ((EventType) winEvent.Type)
+                {
+                    case EventType.Windowevent:
+                    {
+                        switch ((WindowEventID) winEvent.Window.Event)
+                        {
+                            case WindowEventID.Close:
+                                alive = false;
+                                break;
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
         
         device.Dispose();
         surface.Dispose();
