@@ -1,4 +1,5 @@
-﻿using Silk.NET.Core;
+﻿using Graphite.Exceptions;
+using Silk.NET.Core;
 using Silk.NET.Core.Native;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
@@ -10,7 +11,8 @@ internal sealed unsafe class VulkanDevice : Device
     public override bool IsDisposed { get; protected set; }
 
     private readonly Vk _vk;
-    private readonly VkInstance _instance;
+    
+    public readonly VkInstance Instance;
 
     public readonly PhysicalDevice PhysicalDevice;
     public readonly VkDevice Device;
@@ -20,7 +22,7 @@ internal sealed unsafe class VulkanDevice : Device
     public VulkanDevice(Vk vk, VkInstance instance, VulkanSurface surface, PhysicalDevice physicalDevice)
     {
         _vk = vk;
-        _instance = instance;
+        Instance = instance;
         PhysicalDevice = physicalDevice;
 
         uint numQueueFamilies;
@@ -46,7 +48,7 @@ internal sealed unsafe class VulkanDevice : Device
 
         if (!graphicsFamily.HasValue || !presentFamily.HasValue)
         {
-            throw new Exception(
+            throw new UnsupportedFeatureException(
                 $"Graphics/Presentation queues not supported! Graphics: {graphicsFamily.HasValue}, Present: {presentFamily.HasValue}");
         }
 
@@ -94,7 +96,7 @@ internal sealed unsafe class VulkanDevice : Device
         };
         deviceInfo.PNext = &dynamicRendering;
         
-        Instance.Log("Creating device.");
+        Graphite.Instance.Log("Creating device.");
         _vk.CreateDevice(PhysicalDevice, &deviceInfo, null, out Device).Check("Create device");
 
         SilkMarshal.Free(pExtensions);

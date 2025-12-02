@@ -1,4 +1,5 @@
-﻿using Silk.NET.Vulkan;
+﻿using Graphite.Exceptions;
+using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
 
 namespace Graphite.Vulkan;
@@ -24,14 +25,14 @@ internal sealed unsafe class VulkanSurface : Surface
         _instance = instance;
 
         if (!_vk.TryGetInstanceExtension(_instance, out KhrSurface))
-            throw new Exception($"Failed to get {KhrSurface.ExtensionName} instance extension.");
+            throw new GraphicsOperationException($"Failed to get {KhrSurface.ExtensionName} instance extension.");
 
         switch (info.Type)
         {
             case SurfaceType.Win32:
             {
                 if (!_vk.TryGetInstanceExtension(_instance, out _win32Surface))
-                    throw new Exception($"Failed to get {KhrWin32Surface.ExtensionName} instance extension.");
+                    throw new GraphicsOperationException($"Failed to get {KhrWin32Surface.ExtensionName} instance extension.");
 
                 Win32SurfaceCreateInfoKHR surfaceInfo = new()
                 {
@@ -48,7 +49,7 @@ internal sealed unsafe class VulkanSurface : Surface
             case SurfaceType.Wayland:
             {
                 if (!_vk.TryGetInstanceExtension(_instance, out _waylandSurface))
-                    throw new Exception($"Failed to get {KhrWaylandSurface.ExtensionName} instance extension.");
+                    throw new GraphicsOperationException($"Failed to get {KhrWaylandSurface.ExtensionName} instance extension.");
 
                 WaylandSurfaceCreateInfoKHR surfaceInfo = new()
                 {
@@ -65,7 +66,7 @@ internal sealed unsafe class VulkanSurface : Surface
             case SurfaceType.Xlib:
             {
                 if (!_vk.TryGetInstanceExtension(_instance, out _xlibSurface))
-                    throw new Exception($"Failed to get {KhrXlibSurface.ExtensionName} instance extension.");
+                    throw new GraphicsOperationException($"Failed to get {KhrXlibSurface.ExtensionName} instance extension.");
 
                 XlibSurfaceCreateInfoKHR surfaceInfo = new()
                 {
@@ -82,7 +83,7 @@ internal sealed unsafe class VulkanSurface : Surface
             case SurfaceType.Xcb:
             {
                 if (!_vk.TryGetInstanceExtension(_instance, out _xcbSurface))
-                    throw new Exception($"Failed to get {KhrXcbSurface.ExtensionName} instance extension.");
+                    throw new GraphicsOperationException($"Failed to get {KhrXcbSurface.ExtensionName} instance extension.");
 
                 XcbSurfaceCreateInfoKHR surfaceInfo = new()
                 {
@@ -93,7 +94,7 @@ internal sealed unsafe class VulkanSurface : Surface
                 
                 Instance.Log("Creating XCB surface.");
                 _xcbSurface!.CreateXcbSurface(_instance, &surfaceInfo, null, out Surface)
-                    .Check("Create WCB surface");
+                    .Check("Create XCB surface");
                 break;
             }
             default:

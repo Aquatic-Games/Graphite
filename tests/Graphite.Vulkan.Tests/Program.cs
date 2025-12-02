@@ -1,4 +1,5 @@
-﻿using Silk.NET.SDL;
+﻿using Graphite.Core;
+using Silk.NET.SDL;
 
 namespace Graphite.Vulkan.Tests;
 
@@ -42,6 +43,16 @@ public unsafe class Program
         Surface surface = instance.CreateSurface(in surfaceInfo);
         Device device = instance.CreateDevice(surface);
 
+        SwapchainInfo swapchainInfo = new()
+        {
+            Surface = surface,
+            Size = new Size2D(width, height),
+            Format = Format.B8G8R8A8_UNorm,
+            PresentMode = PresentMode.VSyncOn,
+            NumBuffers = 2
+        };
+        Swapchain swapchain = device.CreateSwapchain(in swapchainInfo);
+
         bool alive = true;
         while (alive)
         {
@@ -65,6 +76,7 @@ public unsafe class Program
             }
         }
         
+        swapchain.Dispose();
         device.Dispose();
         surface.Dispose();
         instance.Dispose();
