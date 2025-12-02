@@ -99,7 +99,12 @@ internal sealed unsafe class VulkanDevice : Device
 
         SilkMarshal.Free(pExtensions);
     }
-    
+
+    public override Swapchain CreateSwapchain(in SwapchainInfo info)
+    {
+        return new VulkanSwapchain(_vk, this, in info);
+    }
+
     public override void Dispose()
     {
         if (IsDisposed)
