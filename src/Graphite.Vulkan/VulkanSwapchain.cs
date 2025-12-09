@@ -2,6 +2,7 @@
 using Graphite.Exceptions;
 using Silk.NET.Vulkan;
 using Silk.NET.Vulkan.Extensions.KHR;
+using Semaphore = Silk.NET.Vulkan.Semaphore;
 
 namespace Graphite.Vulkan;
 
@@ -19,14 +20,19 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
     private readonly uint _imageCount;
 
     private readonly KhrSwapchain _khrSwapchain;
+    private readonly Fence _swapchainFence;
+
+    private uint _currentImage;
     private SwapchainKHR _swapchain;
+
+    private VulkanTexture[] _textures;
 
     public override Size2D Size => _size;
 
     public override Format Format => _format;
 
     public override PresentMode PresentMode => _presentMode;
-    
+
     public VulkanSwapchain(Vk vk, VulkanDevice device, ref readonly SwapchainInfo info)
     {
         _vk = vk;
@@ -40,7 +46,49 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
         if (!_vk.TryGetDeviceExtension(_device.Instance, _device.Device, out _khrSwapchain))
             throw new UnsupportedFeatureException($"Failed to get {KhrSwapchain.ExtensionName} instance extension.");
 
+        FenceCreateInfo fenceInfo = new()
+        {
+            SType = StructureType.FenceCreateInfo
+        };
+        Instance.Log("Creating swapchain fence.");
+        _vk.CreateFence(_device.Device, &fenceInfo, null, out _swapchainFence).Check("Create fence");
+
         CreateSwapchain();
+    }
+    
+    public override Texture GetNextTexture()
+    {
+        _khrSwapchain.AcquireNextImage(_device.Device, _swapchain, ulong.MaxValue, new Semaphore(), _swapchainFence,
+            ref _currentImage).Check("Get next swapchain image");
+
+        _vk.WaitForFences(_device.Device, 1, in _swapchainFence, false, ulong.MaxValue).Check("Wait for fence");
+        _vk.ResetFences(_device.Device, 1, in _swapchainFence);
+
+        return _textures[_currentImage];
+    }
+    
+    public override void Present()
+    {
+        uint currentImage = _currentImage;
+        SwapchainKHR swapchain = _swapchain;
+
+        VulkanTexture currentTexture = _textures[currentImage];
+        if (currentTexture.CurrentLayout != ImageLayout.PresentSrcKhr)
+        {
+            CommandBuffer cb = _device.BeginCommands();
+            currentTexture.Transition(cb, currentTexture.CurrentLayout, ImageLayout.PresentSrcKhr);
+            _device.EndCommands();
+        }
+
+        PresentInfoKHR presentInfo = new()
+        {
+            SType = StructureType.PresentInfoKhr,
+            SwapchainCount = 1,
+            PImageIndices = &currentImage,
+            PSwapchains = &swapchain
+        };
+
+        _khrSwapchain.QueuePresent(_device.Queues.Present, &presentInfo).Check("Present");
     }
 
     private void CreateSwapchain()
@@ -122,6 +170,16 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
         
         Instance.Log("Creating swapchain.");
         _khrSwapchain.CreateSwapchain(_device.Device, &swapchainInfo, null, out _swapchain).Check("Create swapchain");
+
+        Instance.Log("Getting swapchain images.");
+        uint numImages;
+        _khrSwapchain.GetSwapchainImages(_device.Device, _swapchain, &numImages, null);
+        Image* images = stackalloc Image[(int) numImages];
+        _khrSwapchain.GetSwapchainImages(_device.Device, _swapchain, &numImages, images);
+
+        _textures = new VulkanTexture[numImages];
+        for (uint i = 0; i < numImages; i++)
+            _textures[i] = new VulkanTexture(_vk, _device.Device, images[i], format);
     }
 
     private static PresentModeKHR TryPresentModes(ReadOnlySpan<PresentModeKHR> availableModes, ReadOnlySpan<PresentModeKHR> acceptablePresentModes)
@@ -144,6 +202,10 @@ internal sealed unsafe class VulkanSwapchain : Swapchain
             return;
         IsDisposed = true;
         
+        foreach (VulkanTexture texture in _textures)
+            texture.Dispose();
+        
+        _vk.DestroyFence(_device.Device, _swapchainFence, null);
         _khrSwapchain.DestroySwapchain(_device.Device, _swapchain, null);
         _khrSwapchain.Dispose();
     }

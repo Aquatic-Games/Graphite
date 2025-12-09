@@ -74,6 +74,9 @@ public unsafe class Program
                     }
                 }
             }
+
+            Texture texture = swapchain.GetNextTexture();
+            swapchain.Present();
         }
         
         swapchain.Dispose();

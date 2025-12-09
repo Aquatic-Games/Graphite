@@ -25,6 +25,17 @@ public abstract class Swapchain : IDisposable
     public abstract PresentMode PresentMode { get; }
 
     /// <summary>
+    /// Gets the next <see cref="Texture"/> in the swap chain to render to.
+    /// </summary>
+    /// <returns>The next texture.</returns>
+    public abstract Texture GetNextTexture();
+
+    /// <summary>
+    /// Present to the swapchain's surface.
+    /// </summary>
+    public abstract void Present();
+
+    /// <summary>
     /// Dispose of this swapchain.
     /// </summary>
     public abstract void Dispose();

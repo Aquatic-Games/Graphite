@@ -11,6 +11,8 @@ internal sealed unsafe class VulkanDevice : Device
     public override bool IsDisposed { get; protected set; }
 
     private readonly Vk _vk;
+    private readonly CommandPool _commandPool;
+    private readonly CommandBuffer _commandBuffer;
     
     public readonly VkInstance Instance;
 
@@ -100,6 +102,29 @@ internal sealed unsafe class VulkanDevice : Device
         _vk.CreateDevice(PhysicalDevice, &deviceInfo, null, out Device).Check("Create device");
 
         SilkMarshal.Free(pExtensions);
+        
+        Graphite.Instance.Log("Getting queues.");
+        _vk.GetDeviceQueue(Device, Queues.GraphicsIndex, 0, out Queues.Graphics);
+        _vk.GetDeviceQueue(Device, Queues.PresentIndex, 0, out Queues.Present);
+
+        CommandPoolCreateInfo commandPoolInfo = new()
+        {
+            SType = StructureType.CommandPoolCreateInfo,
+            Flags = CommandPoolCreateFlags.ResetCommandBufferBit,
+            QueueFamilyIndex = Queues.GraphicsIndex
+        };
+        
+        Graphite.Instance.Log("Creating command pool.");
+        _vk.CreateCommandPool(Device, &commandPoolInfo, null, out _commandPool).Check("Create command pool");
+
+        CommandBufferAllocateInfo allocInfo = new()
+        {
+            SType = StructureType.CommandBufferAllocateInfo,
+            CommandBufferCount = 1,
+            CommandPool = _commandPool,
+            Level = CommandBufferLevel.Primary
+        };
+        _vk.AllocateCommandBuffers(Device, &allocInfo, out _commandBuffer);
     }
 
     public override Swapchain CreateSwapchain(in SwapchainInfo info)
@@ -107,12 +132,46 @@ internal sealed unsafe class VulkanDevice : Device
         return new VulkanSwapchain(_vk, this, in info);
     }
 
+    public CommandBuffer BeginCommands()
+    {
+        CommandBufferBeginInfo beginInfo = new()
+        {
+            SType = StructureType.CommandBufferBeginInfo,
+            Flags = CommandBufferUsageFlags.OneTimeSubmitBit
+        };
+
+        _vk.BeginCommandBuffer(_commandBuffer, &beginInfo).Check("Begin command buffer");
+        return _commandBuffer;
+    }
+
+    public void EndCommands()
+    {
+        _vk.EndCommandBuffer(_commandBuffer).Check("End command buffer");
+
+        CommandBuffer buffer = _commandBuffer;
+        PipelineStageFlags flags = PipelineStageFlags.ColorAttachmentOutputBit;
+
+        SubmitInfo submitInfo = new()
+        {
+            SType = StructureType.SubmitInfo,
+            CommandBufferCount = 1,
+            PCommandBuffers = &buffer,
+            PWaitDstStageMask = &flags
+        };
+
+        _vk.QueueSubmit(Queues.Graphics, 1, &submitInfo, new Fence()).Check("Submit queue");
+        _vk.QueueWaitIdle(Queues.Graphics).Check("Wait for queue idle");
+    }
+
     public override void Dispose()
     {
+        _vk.DeviceWaitIdle(Device).Check("Wait for device idle");
+        
         if (IsDisposed)
             return;
         IsDisposed = true;
         
+        _vk.DestroyCommandPool(Device, _commandPool, null);
         _vk.DestroyDevice(Device, null);
     }
 }
